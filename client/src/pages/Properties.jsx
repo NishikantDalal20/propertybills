@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 const API = 'http://localhost:5000/api/properties';
@@ -43,7 +44,9 @@ export default function Properties() {
       <ul className="space-y-2">
         {properties.map(p => (
           <li key={p._id} className="border p-3 rounded flex justify-between">
-            <span>{p.name} — {p.address} ({p.type})</span>
+            <Link to={`/properties/${p._id}`} className="text-purple-600 dark:text-purple-400 hover:underline font-medium">
+              {p.name} — {p.address} ({p.type})
+            </Link>
             <button onClick={() => handleDelete(p._id)} className="text-red-500">Delete</button>
           </li>
         ))}
