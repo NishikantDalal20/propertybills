@@ -43,11 +43,11 @@ export default function Properties() {
       </form>
       <ul className="space-y-2">
         {properties.map(p => (
-          <li key={p._id} className="border p-3 rounded flex justify-between">
-            <Link to={`/properties/${p._id}`} className="text-purple-600 dark:text-purple-400 hover:underline font-medium">
+          <li key={p._id} className="border p-3 rounded flex justify-between items-center hover:bg-gray-50">
+            <Link to={`/properties/${p._id}`} className="flex-1 font-medium text-blue-600 hover:underline">
               {p.name} — {p.address} ({p.type})
             </Link>
-            <button onClick={() => handleDelete(p._id)} className="text-red-500">Delete</button>
+            <button onClick={() => handleDelete(p._id)} className="text-red-500 hover:text-red-700 ml-4">Delete</button>
           </li>
         ))}
       </ul>
