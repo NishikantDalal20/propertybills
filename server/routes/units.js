@@ -25,6 +25,22 @@ router.post('/', auth, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized: Property does not belong to user' });
     }
 
+    const { unitNumber } = req.body;
+    if (!unitNumber) {
+      return res.status(400).json({ message: 'unitNumber is required' });
+    }
+
+    // Check for duplicate unit number under the same property (case-insensitive)
+    const normalizedUnitNumber = unitNumber.toString().trim();
+    const existingUnit = await RentalUnit.findOne({
+      propertyId,
+      unitNumber: { $regex: new RegExp(`^${normalizedUnitNumber.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') }
+    });
+
+    if (existingUnit) {
+      return res.status(400).json({ message: 'Unit number already exists for this property' });
+    }
+
     const unit = await RentalUnit.create(req.body);
     res.status(201).json(unit);
   } catch (err) {
