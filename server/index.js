@@ -5,6 +5,7 @@ import cors from 'cors';
 import authRoutes from './routes/auth.js';
 import propertyRoutes from './routes/properties.js';
 import unitRoutes from './routes/units.js';
+import tenantRoutes from './routes/tenants.js';
 
 const app = express();
 app.use(cors());
@@ -15,6 +16,7 @@ app.use('/api/auth', authRoutes);
 
 app.use('/api/properties', propertyRoutes);
 app.use('/api/units', unitRoutes);
+app.use('/api/tenants', tenantRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
