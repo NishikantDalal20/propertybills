@@ -48,6 +48,21 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
+// GET /api/units/vacant - Get all vacant units owned by user
+router.get('/vacant', auth, async (req, res) => {
+  try {
+    const properties = await Property.find({ ownerId: req.user.id });
+    const propertyIds = properties.map(p => p._id);
+    const units = await RentalUnit.find({
+      propertyId: { $in: propertyIds },
+      status: 'Vacant'
+    }).populate('propertyId');
+    res.json(units);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/units/property/:propertyId - Get units for property
 router.get('/property/:propertyId', auth, async (req, res) => {
   try {

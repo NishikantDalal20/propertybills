@@ -12,7 +12,10 @@ router.post('/', auth, async (req, res) => {
 });
 
 router.get('/', auth, async (req, res) => {
-  const tenants = await Tenant.find({ ownerId: req.user.id }).populate('unitId');
+  const tenants = await Tenant.find({ ownerId: req.user.id }).populate({
+    path: 'unitId',
+    populate: { path: 'propertyId' }
+  });
   res.json(tenants);
 });
 
