@@ -75,9 +75,87 @@ router.put('/:id/assign', auth, async (req, res) => {
   }
 });
 
+// PUT /api/tenants/:id/unassign - Unassign tenant from unit
+router.put('/:id/unassign', auth, async (req, res) => {
+  try {
+    const tenant = await Tenant.findById(req.params.id);
+    if (!tenant) {
+      return res.status(404).json({ message: 'Tenant not found' });
+    }
+
+    if (tenant.ownerId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    if (!tenant.unitId) {
+      return res.status(400).json({ message: 'Tenant is not assigned to any unit' });
+    }
+
+    const unit = await RentalUnit.findById(tenant.unitId);
+    if (unit) {
+      unit.status = 'Vacant';
+      await unit.save();
+    }
+
+    tenant.unitId = null;
+    await tenant.save();
+
+    res.json(tenant);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/tenants/:id/status - Toggle or update tenant status
+router.put('/:id/status', auth, async (req, res) => {
+  try {
+    const tenant = await Tenant.findById(req.params.id);
+    if (!tenant) {
+      return res.status(404).json({ message: 'Tenant not found' });
+    }
+
+    if (tenant.ownerId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    const newStatus = req.body.status || (tenant.status === 'Active' ? 'Inactive' : 'Active');
+    if (!['Active', 'Inactive'].includes(newStatus)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
+    tenant.status = newStatus;
+    await tenant.save();
+
+    res.json(tenant);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.delete('/:id', auth, async (req, res) => {
-  await Tenant.findByIdAndDelete(req.params.id);
-  res.json({ message: 'Tenant deleted' });
+  try {
+    const tenant = await Tenant.findById(req.params.id);
+    if (!tenant) {
+      return res.status(404).json({ message: 'Tenant not found' });
+    }
+
+    if (tenant.ownerId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    if (tenant.unitId) {
+      const unit = await RentalUnit.findById(tenant.unitId);
+      if (unit) {
+        unit.status = 'Vacant';
+        await unit.save();
+      }
+    }
+
+    await Tenant.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Tenant deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;
