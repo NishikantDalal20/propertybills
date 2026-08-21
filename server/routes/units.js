@@ -1,6 +1,7 @@
 import express from 'express';
 import RentalUnit from '../models/RentalUnit.js';
 import Property from '../models/Property.js';
+import Tenant from '../models/Tenant.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
@@ -107,7 +108,7 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// DELETE /api/units/:id - Delete unit
+// DELETE /api/units/:id - Delete unit and unassign tenants
 router.delete('/:id', auth, async (req, res) => {
   try {
     const unit = await RentalUnit.findById(req.params.id);
@@ -120,6 +121,7 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(403).json({ message: 'Unauthorized: Property does not belong to user' });
     }
 
+    await Tenant.updateMany({ unitId: req.params.id }, { unitId: null });
     await RentalUnit.findByIdAndDelete(req.params.id);
     res.json({ message: 'Unit deleted' });
   } catch (err) {

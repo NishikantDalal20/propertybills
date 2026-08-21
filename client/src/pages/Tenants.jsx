@@ -10,10 +10,11 @@ export default function Tenants() {
   const [tenants, setTenants] = useState([]);
   const [vacantUnits, setVacantUnits] = useState([]);
   const [selectedUnits, setSelectedUnits] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
   const [form, setForm] = useState({ name: '', phone: '', email: '', status: 'Active' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // Toast notifications state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
@@ -135,6 +136,17 @@ export default function Tenants() {
     navigate('/');
   };
 
+  const filteredTenants = tenants.filter(t => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+
+    const nameMatch = t.name?.toLowerCase().includes(query);
+    const unitNumberMatch = t.unitId?.unitNumber?.toLowerCase().includes(query);
+    const propertyNameMatch = t.unitId?.propertyId?.name?.toLowerCase().includes(query);
+
+    return nameMatch || unitNumberMatch || propertyNameMatch;
+  });
+
   return (
     <div className="min-h-screen bg-gray-50/50 flex flex-col font-sans">
       {/* Top Header / Navigation */}
@@ -197,7 +209,7 @@ export default function Tenants() {
         {/* Title Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Tenants Directory</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage active rental profiles, status, and property unit assignments.</p>
+          <p className="text-gray-500 text-sm mt-1">Manage active rental profiles, status toggle, and property unit assignments.</p>
         </div>
 
         {/* Add Tenant Section */}
@@ -246,10 +258,37 @@ export default function Tenants() {
           </form>
         </div>
 
+        {/* Search & Filter Bar */}
+        <div className="mb-6 relative">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search tenants by name or assigned unit..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-11 pr-10 py-3 border border-gray-200 rounded-xl text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
+            <svg className="w-5 h-5 text-gray-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-600 text-sm font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Tenants List Section */}
         <div className="bg-white border border-gray-200/60 rounded-2xl shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-            <span className="text-sm font-bold text-gray-600">Total Registered Tenants: {tenants.length}</span>
+            <span className="text-sm font-bold text-gray-600">
+              Total Registered Tenants: {tenants.length}
+              {searchQuery && ` (Showing ${filteredTenants.length})`}
+            </span>
           </div>
 
           {loading ? (
@@ -260,14 +299,16 @@ export default function Tenants() {
               </svg>
               Loading tenants data...
             </div>
-          ) : tenants.length === 0 ? (
+          ) : filteredTenants.length === 0 ? (
             <div className="p-12 text-center text-gray-500">
               <p className="font-medium text-lg">No tenants found</p>
-              <p className="text-sm mt-1 text-gray-400">Add active lease profiles above to get started.</p>
+              <p className="text-sm mt-1 text-gray-400">
+                {searchQuery ? `No tenants match "${searchQuery}"` : 'Add active lease profiles above to get started.'}
+              </p>
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {tenants.map(t => (
+              {filteredTenants.map(t => (
                 <div key={t._id} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:bg-gray-50/50 transition-colors">
                   
                   {/* Tenant Identity & Metadata */}
@@ -278,7 +319,7 @@ export default function Tenants() {
                       {/* Status Badges */}
                       {t.unitId && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          Assigned: {t.unitId.unitNumber} ({t.unitId.propertyId?.name || 'Property'})
+                          Assigned: Unit {t.unitId.unitNumber} ({t.unitId.propertyId?.name || 'Property'})
                         </span>
                       )}
 
