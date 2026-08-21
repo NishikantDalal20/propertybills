@@ -102,6 +102,29 @@ export default function Tenants() {
     }
   };
 
+  const handleUnassignUnit = async (tenantId) => {
+    try {
+      await axios.put(`${API_TENANTS}/${tenantId}/unassign`, {}, authHeader());
+      triggerToast('Unit unassigned successfully!', 'success');
+      loadData();
+    } catch (err) {
+      console.error(err);
+      triggerToast(err.response?.data?.message || 'Failed to unassign unit', 'error');
+    }
+  };
+
+  const handleToggleStatus = async (tenantId, currentStatus) => {
+    const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+    try {
+      await axios.put(`${API_TENANTS}/${tenantId}/status`, { status: newStatus }, authHeader());
+      triggerToast(`Tenant status updated to ${newStatus}`, 'success');
+      loadData();
+    } catch (err) {
+      console.error(err);
+      triggerToast(err.response?.data?.message || 'Failed to update tenant status', 'error');
+    }
+  };
+
   const handleSelectUnit = (tenantId, unitId) => {
     setSelectedUnits(prev => ({ ...prev, [tenantId]: unitId }));
   };
@@ -253,19 +276,24 @@ export default function Tenants() {
                       <h3 className="font-bold text-gray-900 text-lg truncate">{t.name}</h3>
                       
                       {/* Status Badges */}
-                      {t.unitId ? (
+                      {t.unitId && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                           Assigned: {t.unitId.unitNumber} ({t.unitId.propertyId?.name || 'Property'})
                         </span>
-                      ) : t.status === 'Active' ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                          Inactive
-                        </span>
                       )}
+
+                      <button
+                        onClick={() => handleToggleStatus(t._id, t.status)}
+                        title="Click to toggle status"
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border transition-all cursor-pointer hover:opacity-80 active:scale-95 ${
+                          t.status === 'Active'
+                            ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                            : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${t.status === 'Active' ? 'bg-blue-500' : 'bg-gray-400'}`}></span>
+                        {t.status}
+                      </button>
                     </div>
                     
                     <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-500">
@@ -289,7 +317,7 @@ export default function Tenants() {
                   </div>
 
                   {/* Actions Column */}
-                  <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+                  <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     
                     {/* Inline Assignment Form */}
                     {!t.unitId && t.status === 'Active' && (
@@ -314,6 +342,24 @@ export default function Tenants() {
                         </button>
                       </div>
                     )}
+
+                    {/* Unassign Unit Action */}
+                    {t.unitId && (
+                      <button
+                        onClick={() => handleUnassignUnit(t._id)}
+                        className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-semibold py-1.5 px-3.5 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer text-sm whitespace-nowrap"
+                      >
+                        Unassign Unit
+                      </button>
+                    )}
+
+                    {/* Toggle Status Button */}
+                    <button
+                      onClick={() => handleToggleStatus(t._id, t.status)}
+                      className="text-sm font-semibold text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap"
+                    >
+                      Set {t.status === 'Active' ? 'Inactive' : 'Active'}
+                    </button>
 
                     {/* Delete Action */}
                     <button
