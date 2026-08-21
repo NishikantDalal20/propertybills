@@ -1,0 +1,518 @@
+{
+	"info": {
+		"_postman_id": "8bfa51cf-41c3-4d6d-9653-f725a3ad60f1",
+		"name": "PropertyBills - Tenant Assignment Validation",
+		"description": "Verification collection for testing the new tenant assignment validations and occupied unit rejection logic.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Register Owner",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();",
+							"if (response.token) {",
+							"    pm.collectionVariables.set(\"token\", response.token);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"John Test Owner\",\n    \"email\": \"john.owner.test{{$randomInt}}@example.com\",\n    \"password\": \"securepassword123\",\n    \"role\": \"owner\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/auth/register",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"auth",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. Create Property",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();",
+							"if (response._id) {",
+							"    pm.collectionVariables.set(\"propertyId\", response._id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Validation Test Residency\",\n    \"address\": \"789 Validation Lane\",\n    \"type\": \"Flat\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/properties",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"properties"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. Create Rental Unit",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();",
+							"if (response._id) {",
+							"    pm.collectionVariables.set(\"unitId\", response._id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"propertyId\": \"{{propertyId}}\",\n    \"unitNumber\": \"U-101-{{$randomInt}}\",\n    \"unitType\": \"Flat\",\n    \"rentAmount\": 2200,\n    \"meterNumber\": \"MTR-VAL-{{$randomInt}}\",\n    \"status\": \"Vacant\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/units",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"units"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4. Create Active Tenant A",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();",
+							"if (response._id) {",
+							"    pm.collectionVariables.set(\"tenantIdActive\", response._id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Active Tenant A\",\n    \"email\": \"active.a@test.com\",\n    \"phone\": \"555-0001\",\n    \"status\": \"Active\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/tenants",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"tenants"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "5. Create Inactive Tenant B",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();",
+							"if (response._id) {",
+							"    pm.collectionVariables.set(\"tenantIdInactive\", response._id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Inactive Tenant B\",\n    \"email\": \"inactive.b@test.com\",\n    \"phone\": \"555-0002\",\n    \"status\": \"Inactive\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/tenants",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"tenants"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6. Create Active Tenant C",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();",
+							"if (response._id) {",
+							"    pm.collectionVariables.set(\"tenantIdAssigned\", response._id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Active Tenant C\",\n    \"email\": \"active.c@test.com\",\n    \"phone\": \"555-0003\",\n    \"status\": \"Active\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/tenants",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"tenants"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "7. Test Rejection - Inactive Tenant Assignment",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"pm.test(\"Message specifies tenant must be Active\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.eql(\"Tenant must be Active to be assigned\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"unitId\": \"{{unitId}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/tenants/{{tenantIdInactive}}/assign",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"tenants",
+						"{{tenantIdInactive}}",
+						"assign"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "8. Assign Tenant A (Success)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"unitId\": \"{{unitId}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/tenants/{{tenantIdActive}}/assign",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"tenants",
+						"{{tenantIdActive}}",
+						"assign"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "9. Test Rejection - Already Assigned Tenant",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"pm.test(\"Message specifies tenant is already assigned\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.eql(\"Tenant is already assigned to a unit\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"unitId\": \"{{unitId}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/tenants/{{tenantIdActive}}/assign",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"tenants",
+						"{{tenantIdActive}}",
+						"assign"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "10. Test Rejection - Occupied Unit",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"pm.test(\"Message specifies unit is already occupied\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.message).to.eql(\"Unit already occupied\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"unitId\": \"{{unitId}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/tenants/{{tenantIdAssigned}}/assign",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"tenants",
+						"{{tenantIdAssigned}}",
+						"assign"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "propertyId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "unitId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tenantIdActive",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tenantIdInactive",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tenantIdAssigned",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
