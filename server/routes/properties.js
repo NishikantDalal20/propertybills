@@ -1,6 +1,7 @@
 import express from 'express';
 import Property from '../models/Property.js';
 import RentalUnit from '../models/RentalUnit.js';
+import Tenant from '../models/Tenant.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
@@ -56,8 +57,18 @@ router.put('/:id', auth, async (req, res) => {
 });
 
 router.delete('/:id', auth, async (req, res) => {
-  await Property.findOneAndDelete({ _id: req.params.id, ownerId: req.user.id });
-  res.json({ message: 'Property deleted' });
+  try {
+    const units = await RentalUnit.find({ propertyId: req.params.id });
+    const unitIds = units.map(u => u._id);
+
+    await Tenant.updateMany({ unitId: { $in: unitIds } }, { unitId: null });
+    await RentalUnit.deleteMany({ propertyId: req.params.id });
+    await Property.findOneAndDelete({ _id: req.params.id, ownerId: req.user.id });
+
+    res.json({ message: 'Property deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;

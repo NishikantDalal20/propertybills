@@ -7,16 +7,24 @@ import auth from '../middleware/auth.js';
 const router = express.Router();
 
 router.post('/', auth, async (req, res) => {
-  const tenant = await Tenant.create({ ...req.body, ownerId: req.user.id });
-  res.status(201).json(tenant);
+  try {
+    const tenant = await Tenant.create({ ...req.body, ownerId: req.user.id });
+    res.status(201).json(tenant);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.get('/', auth, async (req, res) => {
-  const tenants = await Tenant.find({ ownerId: req.user.id }).populate({
-    path: 'unitId',
-    populate: { path: 'propertyId' }
-  });
-  res.json(tenants);
+  try {
+    const tenants = await Tenant.find({ ownerId: req.user.id }).populate({
+      path: 'unitId',
+      populate: { path: 'propertyId' }
+    });
+    res.json(tenants);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.put('/:id/assign', auth, async (req, res) => {
@@ -31,16 +39,25 @@ router.put('/:id/assign', auth, async (req, res) => {
       return res.status(404).json({ message: 'Tenant not found' });
     }
 
+    // Verify tenant ownership
     if (tenant.ownerId.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
 
+    // Validate tenant status
     if (tenant.status !== 'Active') {
       return res.status(400).json({ message: 'Tenant must be Active to be assigned' });
     }
 
+    // Validate tenant not already assigned
     if (tenant.unitId) {
-      return res.status(400).json({ message: 'Tenant is already assigned to a unit' });
+      const existingAssignedUnit = await RentalUnit.findById(tenant.unitId);
+      if (existingAssignedUnit) {
+        return res.status(400).json({ message: 'Tenant is already assigned to a unit' });
+      } else {
+        // Clean up stale unit reference if unit was deleted
+        tenant.unitId = null;
+      }
     }
 
     const unit = await RentalUnit.findById(unitId);
@@ -48,10 +65,18 @@ router.put('/:id/assign', auth, async (req, res) => {
       return res.status(404).json({ message: 'Rental unit not found' });
     }
 
+    // Verify unit ownership (via property)
+    const property = await Property.findOne({ _id: unit.propertyId, ownerId: req.user.id });
+    if (!property) {
+      return res.status(403).json({ message: 'Unauthorized: Target unit property does not belong to user' });
+    }
+
+    // Validate unit status
     if (unit.status === 'Occupied') {
       return res.status(400).json({ message: 'Unit already occupied' });
     }
 
+    // Update assignment
     tenant.unitId = unitId;
     await tenant.save();
 
@@ -150,13 +175,22 @@ router.put('/:id', auth, async (req, res) => {
 router.delete('/:id', auth, async (req, res) => {
   try {
     const tenant = await Tenant.findById(req.params.id);
-    if (tenant && tenant.unitId) {
+    if (!tenant) {
+      return res.status(404).json({ message: 'Tenant not found' });
+    }
+
+    if (tenant.ownerId.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    if (tenant.unitId) {
       const unit = await RentalUnit.findById(tenant.unitId);
       if (unit) {
         unit.status = 'Vacant';
         await unit.save();
       }
     }
+
     await Tenant.findByIdAndDelete(req.params.id);
     res.json({ message: 'Tenant deleted' });
   } catch (err) {
