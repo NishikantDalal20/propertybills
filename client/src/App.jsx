@@ -5,6 +5,8 @@ import Dashboard from './pages/Dashboard';
 import Properties from './pages/Properties';
 import PropertyDetail from './pages/PropertyDetail';
 import Tenants from './pages/Tenants';
+import MeterReadings from './pages/MeterReadings';
+
 function App() {
   return (
     <BrowserRouter>
@@ -15,6 +17,7 @@ function App() {
         <Route path="/properties" element={<Properties />} />
         <Route path="/properties/:id" element={<PropertyDetail />} />
         <Route path="/tenants" element={<Tenants />} />
+        <Route path="/readings" element={<MeterReadings />} />
       </Routes>
     </BrowserRouter>
   );

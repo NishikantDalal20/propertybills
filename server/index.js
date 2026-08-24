@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.js';
 import propertyRoutes from './routes/properties.js';
 import unitRoutes from './routes/units.js';
 import tenantRoutes from './routes/tenants.js';
+import readingRoutes from './routes/readings.js';
 
 const app = express();
 app.use(cors());
@@ -17,6 +18,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/units', unitRoutes);
 app.use('/api/tenants', tenantRoutes);
+app.use('/api/readings', readingRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
