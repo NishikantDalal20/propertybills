@@ -166,6 +166,9 @@ export default function Tenants() {
               <Link to="/tenants" className="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-50 text-blue-600 transition-all">
                 Tenants
               </Link>
+              <Link to="/readings" className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 transition-all">
+                Meter Readings
+              </Link>
             </div>
           </div>
           <div className="flex items-center gap-4">
