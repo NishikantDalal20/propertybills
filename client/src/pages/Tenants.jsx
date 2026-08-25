@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-
-const API_TENANTS = 'http://localhost:5000/api/tenants';
-const API_VACANT_UNITS = 'http://localhost:5000/api/units/vacant';
-const authHeader = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+import toast from 'react-hot-toast';
+import api from '../lib/api';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Tenants() {
   const [tenants, setTenants] = useState([]);
@@ -15,32 +13,21 @@ export default function Tenants() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Toast notifications state
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
 
-  const triggerToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, show: false }));
-    }, 4000);
-  };
-
   const fetchTenants = async () => {
     try {
-      const res = await axios.get(API_TENANTS, authHeader());
+      const res = await api.get('/tenants');
       setTenants(res.data);
     } catch (err) {
-      console.error(err);
       setError('Failed to fetch tenants');
     }
   };
 
   const fetchVacantUnits = async () => {
     try {
-      const res = await axios.get(API_VACANT_UNITS, authHeader());
+      const res = await api.get('/units/vacant');
       setVacantUnits(res.data);
     } catch (err) {
       console.error(err);
@@ -60,37 +47,35 @@ export default function Tenants() {
   const handleAdd = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(API_TENANTS, form, authHeader());
+      await api.post('/tenants', form);
       setForm({ name: '', phone: '', email: '', status: 'Active' });
-      triggerToast('Tenant added successfully!', 'success');
+      toast.success('Tenant added successfully!');
       loadData();
     } catch (err) {
-      console.error(err);
-      triggerToast(err.response?.data?.message || 'Failed to add tenant', 'error');
+      toast.error(err.response?.data?.message || 'Failed to add tenant');
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API_TENANTS}/${id}`, authHeader());
-      triggerToast('Tenant deleted successfully', 'success');
+      await api.delete(`/tenants/${id}`);
+      toast.success('Tenant deleted successfully');
       loadData();
     } catch (err) {
-      console.error(err);
-      triggerToast('Failed to delete tenant', 'error');
+      toast.error('Failed to delete tenant');
     }
   };
 
   const handleAssignUnit = async (tenantId) => {
     const unitId = selectedUnits[tenantId];
     if (!unitId) {
-      triggerToast('Please select a vacant unit', 'error');
+      toast.error('Please select a vacant unit');
       return;
     }
 
     try {
-      await axios.put(`${API_TENANTS}/${tenantId}/assign`, { unitId }, authHeader());
-      triggerToast('Tenant assigned successfully!', 'success');
+      await api.put(`/tenants/${tenantId}/assign`, { unitId });
+      toast.success('Tenant assigned successfully!');
       setSelectedUnits(prev => {
         const copy = { ...prev };
         delete copy[tenantId];
@@ -98,31 +83,28 @@ export default function Tenants() {
       });
       loadData();
     } catch (err) {
-      console.error(err);
-      triggerToast(err.response?.data?.message || 'Failed to assign unit', 'error');
+      toast.error(err.response?.data?.message || 'Failed to assign unit');
     }
   };
 
   const handleUnassignUnit = async (tenantId) => {
     try {
-      await axios.put(`${API_TENANTS}/${tenantId}/unassign`, {}, authHeader());
-      triggerToast('Unit unassigned successfully!', 'success');
+      await api.put(`/tenants/${tenantId}/unassign`, {});
+      toast.success('Unit unassigned successfully!');
       loadData();
     } catch (err) {
-      console.error(err);
-      triggerToast(err.response?.data?.message || 'Failed to unassign unit', 'error');
+      toast.error(err.response?.data?.message || 'Failed to unassign unit');
     }
   };
 
   const handleToggleStatus = async (tenantId, currentStatus) => {
     const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
     try {
-      await axios.put(`${API_TENANTS}/${tenantId}/status`, { status: newStatus }, authHeader());
-      triggerToast(`Tenant status updated to ${newStatus}`, 'success');
+      await api.put(`/tenants/${tenantId}/status`, { status: newStatus });
+      toast.success(`Tenant status updated to ${newStatus}`);
       loadData();
     } catch (err) {
-      console.error(err);
-      triggerToast(err.response?.data?.message || 'Failed to update tenant status', 'error');
+      toast.error(err.response?.data?.message || 'Failed to update tenant status');
     }
   };
 
@@ -185,26 +167,6 @@ export default function Tenants() {
           </div>
         </div>
       </nav>
-
-      {/* Toast Notification */}
-      {toast.show && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-md transition-all duration-300 transform translate-y-0 ${
-          toast.type === 'success' 
-            ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800' 
-            : 'bg-rose-50/95 border-rose-200 text-rose-800'
-        }`}>
-          {toast.type === 'success' ? (
-            <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          )}
-          <span className="text-sm font-semibold">{toast.message}</span>
-        </div>
-      )}
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
@@ -295,13 +257,7 @@ export default function Tenants() {
           </div>
 
           {loading ? (
-            <div className="p-12 text-center text-gray-500">
-              <svg className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Loading tenants data...
-            </div>
+            <LoadingSpinner center label="Loading tenants data..." />
           ) : filteredTenants.length === 0 ? (
             <div className="p-12 text-center text-gray-500">
               <p className="font-medium text-lg">No tenants found</p>

@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import toast from 'react-hot-toast';
+import api from '../lib/api';
 import StatusBadge from '../components/StatusBadge';
-
-const API_PROPERTIES = 'http://localhost:5000/api/properties';
-const API_UNITS = 'http://localhost:5000/api/units';
-const authHeader = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function PropertyDetail() {
   const { id } = useParams();
@@ -16,7 +14,6 @@ export default function PropertyDetail() {
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const [unitForm, setUnitForm] = useState({
     unitNumber: '',
@@ -26,19 +23,12 @@ export default function PropertyDetail() {
     status: 'Vacant'
   });
 
-  const triggerToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, show: false }));
-    }, 4000);
-  };
-
   const fetchData = async () => {
     try {
       setLoading(true);
       const [propRes, unitsRes] = await Promise.all([
-        axios.get(`${API_PROPERTIES}/${id}`, authHeader()),
-        axios.get(`${API_UNITS}/property/${id}`, authHeader())
+        api.get(`/properties/${id}`),
+        api.get(`/units/property/${id}`)
       ]);
       setProperty(propRes.data);
       setUnits(unitsRes.data);
@@ -57,41 +47,37 @@ export default function PropertyDetail() {
   const handleAddUnit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
-        API_UNITS,
-        {
-          ...unitForm,
-          propertyId: id,
-          rentAmount: Number(unitForm.rentAmount)
-        },
-        authHeader()
-      );
+      await api.post('/units', {
+        ...unitForm,
+        propertyId: id,
+        rentAmount: Number(unitForm.rentAmount)
+      });
       setUnitForm({ unitNumber: '', unitType: 'Flat', rentAmount: '', meterNumber: '', status: 'Vacant' });
-      triggerToast('Rental unit added successfully!', 'success');
+      toast.success('Rental unit added successfully!');
       fetchData();
     } catch (err) {
-      triggerToast(err.response?.data?.message || 'Failed to add unit', 'error');
+      toast.error(err.response?.data?.message || 'Failed to add unit');
     }
   };
 
   const handleToggleStatus = async (unit) => {
     const newStatus = unit.status === 'Occupied' ? 'Vacant' : 'Occupied';
     try {
-      await axios.put(`${API_UNITS}/${unit._id}`, { status: newStatus }, authHeader());
-      triggerToast(`Unit status set to ${newStatus}`, 'success');
+      await api.put(`/units/${unit._id}`, { status: newStatus });
+      toast.success(`Unit status set to ${newStatus}`);
       fetchData();
     } catch (err) {
-      triggerToast(err.response?.data?.message || 'Failed to update status', 'error');
+      toast.error(err.response?.data?.message || 'Failed to update status');
     }
   };
 
   const handleDeleteUnit = async (unitId) => {
     try {
-      await axios.delete(`${API_UNITS}/${unitId}`, authHeader());
-      triggerToast('Unit deleted successfully', 'success');
+      await api.delete(`/units/${unitId}`);
+      toast.success('Unit deleted successfully');
       fetchData();
     } catch (err) {
-      triggerToast(err.response?.data?.message || 'Failed to delete unit', 'error');
+      toast.error(err.response?.data?.message || 'Failed to delete unit');
     }
   };
 
@@ -139,26 +125,6 @@ export default function PropertyDetail() {
           </div>
         </div>
       </nav>
-
-      {/* Toast Notification */}
-      {toast.show && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-md transition-all duration-300 transform translate-y-0 ${
-          toast.type === 'success' 
-            ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800' 
-            : 'bg-rose-50/95 border-rose-200 text-rose-800'
-        }`}>
-          {toast.type === 'success' ? (
-            <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          )}
-          <span className="text-sm font-semibold">{toast.message}</span>
-        </div>
-      )}
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
@@ -249,9 +215,7 @@ export default function PropertyDetail() {
           </div>
 
           {loading ? (
-            <div className="p-12 text-center text-gray-500">
-              Loading unit configurations...
-            </div>
+            <LoadingSpinner center label="Loading unit configurations..." />
           ) : units.length === 0 ? (
             <div className="p-12 text-center text-gray-500">
               <p className="font-medium text-lg">No units added yet</p>
