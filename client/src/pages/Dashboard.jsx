@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-
-const API_SUMMARY = 'http://localhost:5000/api/properties/summary';
-const authHeader = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+import api from '../lib/api';
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -17,11 +14,10 @@ export default function Dashboard() {
     const fetchSummary = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(API_SUMMARY, authHeader());
+        const res = await api.get('/properties/summary');
         setStats(res.data);
         setError('');
       } catch (err) {
-        console.error(err);
         setError(err.response?.data?.message || 'Failed to fetch dashboard summary');
       } finally {
         setLoading(false);

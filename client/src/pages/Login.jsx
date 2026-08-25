@@ -1,35 +1,82 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     try {
       const res = await axios.post('http://localhost:5000/api/auth/login', form);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
+      toast.success('Logged in successfully!');
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      const msg = err.response?.data?.message || 'Login failed';
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6">Login</h1>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        <input type="email" placeholder="Email" required className="w-full border p-2 rounded mb-4"
-          onChange={(e) => setForm({ ...form, email: e.target.value })} />
-        <input type="password" placeholder="Password" required className="w-full border p-2 rounded mb-4"
-          onChange={(e) => setForm({ ...form, password: e.target.value })} />
-        <button className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Login</button>
-        <p className="mt-4 text-sm">No account? <Link to="/register" className="text-blue-600">Register</Link></p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50/50 p-4">
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl border border-gray-200/80 shadow-sm w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-2 text-gray-900">Welcome Back</h1>
+        <p className="text-xs text-gray-500 mb-6">Sign in to manage your property bills and readings.</p>
+        
+        {error && (
+          <div className="p-3 mb-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Email</label>
+            <input
+              type="email"
+              placeholder="Email"
+              required
+              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Password</label>
+            <input
+              type="password"
+              placeholder="Password"
+              required
+              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-sm rounded-xl shadow-sm hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center justify-center"
+          >
+            {loading ? <LoadingSpinner size="sm" color="white" label="Signing in..." /> : 'Login'}
+          </button>
+        </div>
+
+        <p className="mt-6 text-xs text-center text-gray-500">
+          No account? <Link to="/register" className="text-blue-600 font-semibold hover:underline">Register here</Link>
+        </p>
       </form>
     </div>
   );

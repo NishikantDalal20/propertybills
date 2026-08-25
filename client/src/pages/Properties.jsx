@@ -1,35 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-
-const API = 'http://localhost:5000/api/properties';
-const authHeader = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+import toast from 'react-hot-toast';
+import api from '../lib/api';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Properties() {
   const [properties, setProperties] = useState([]);
   const [form, setForm] = useState({ name: '', address: '', type: 'House' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
 
-  const triggerToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, show: false }));
-    }, 4000);
-  };
-
   const fetchProperties = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(API, authHeader());
+      const res = await api.get('/properties');
       setProperties(res.data);
       setError('');
     } catch (err) {
-      console.error(err);
       setError(err.response?.data?.message || 'Failed to fetch properties');
     } finally {
       setLoading(false);
@@ -43,24 +33,22 @@ export default function Properties() {
   const handleAdd = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(API, form, authHeader());
+      await api.post('/properties', form);
       setForm({ name: '', address: '', type: 'House' });
-      triggerToast('Property added successfully!', 'success');
+      toast.success('Property added successfully!');
       fetchProperties();
     } catch (err) {
-      console.error(err);
-      triggerToast(err.response?.data?.message || 'Failed to add property', 'error');
+      toast.error(err.response?.data?.message || 'Failed to add property');
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API}/${id}`, authHeader());
-      triggerToast('Property deleted successfully', 'success');
+      await api.delete(`/properties/${id}`);
+      toast.success('Property deleted successfully');
       fetchProperties();
     } catch (err) {
-      console.error(err);
-      triggerToast('Failed to delete property', 'error');
+      toast.error('Failed to delete property');
     }
   };
 
@@ -185,13 +173,7 @@ export default function Properties() {
           </div>
 
           {loading ? (
-            <div className="p-12 text-center text-gray-500">
-              <svg className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Loading properties data...
-            </div>
+            <LoadingSpinner center label="Loading properties data..." />
           ) : properties.length === 0 ? (
             <div className="p-12 text-center text-gray-500">
               <p className="font-medium text-lg">No properties found</p>

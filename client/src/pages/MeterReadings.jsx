@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-
-const API_UNITS = 'http://localhost:5000/api/units';
-const API_READINGS = 'http://localhost:5000/api/readings';
-const authHeader = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+import toast from 'react-hot-toast';
+import api from '../lib/api';
+import GenerateBillButton from '../components/GenerateBillButton';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function MeterReadings() {
   const [units, setUnits] = useState([]);
@@ -22,42 +21,27 @@ export default function MeterReadings() {
   const [loadingUnits, setLoadingUnits] = useState(true);
   const [fetchingPrevious, setFetchingPrevious] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  
   const [error, setError] = useState('');
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  const triggerToast = (message, type = 'success') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => {
-      setToast(prev => ({ ...prev, show: false }));
-    }, 4000);
-  };
-
-  // Fetch all units on mount
   useEffect(() => {
     const fetchUnits = async () => {
       try {
         setLoadingUnits(true);
-        const res = await axios.get(API_UNITS, authHeader());
+        const res = await api.get('/units');
         setUnits(res.data);
-        if (res.data.length > 0) {
-          setSelectedUnitId(res.data[0]._id);
-        }
+        if (res.data.length > 0) setSelectedUnitId(res.data[0]._id);
       } catch (err) {
-        console.error('Failed to fetch units:', err);
         setError(err.response?.data?.message || 'Failed to load rental units');
       } finally {
         setLoadingUnits(false);
       }
     };
-
     fetchUnits();
   }, []);
 
-  // Fetch readings history and auto-fetch previous reading when selectedUnitId changes
   useEffect(() => {
     if (!selectedUnitId) {
       setReadingsHistory([]);
@@ -68,26 +52,16 @@ export default function MeterReadings() {
     const fetchUnitReadings = async () => {
       try {
         setFetchingPrevious(true);
-        const res = await axios.get(`${API_READINGS}/unit/${selectedUnitId}`, authHeader());
-        const readings = res.data;
-        setReadingsHistory(readings);
-
-        if (readings && readings.length > 0) {
-          // Latest reading is first element due to sort({ month: -1 })
-          const latestReading = readings[0];
-          setPreviousReading(latestReading.currentReading);
-        } else {
-          setPreviousReading(0);
-        }
+        const res = await api.get(`/readings/unit/${selectedUnitId}`);
+        setReadingsHistory(res.data);
+        setPreviousReading(res.data[0]?.currentReading || 0);
       } catch (err) {
-        console.error('Failed to fetch unit readings:', err);
         setReadingsHistory([]);
         setPreviousReading(0);
       } finally {
         setFetchingPrevious(false);
       }
     };
-
     fetchUnitReadings();
   }, [selectedUnitId]);
 
@@ -108,28 +82,13 @@ export default function MeterReadings() {
     e.preventDefault();
     setError('');
 
-    if (!selectedUnitId) {
-      setError('Please select a rental unit');
-      return;
-    }
-
-    if (!month) {
-      setError('Please select a billing month');
-      return;
-    }
-
-    if (currentReading === '') {
-      setError('Please enter the current meter reading');
+    if (!selectedUnitId || !month || currentReading === '') {
+      setError('Please fill in all required fields');
       return;
     }
 
     const currNum = Number(currentReading);
     const prevNum = Number(previousReading);
-
-    if (isNaN(currNum) || isNaN(prevNum)) {
-      setError('Readings must be valid numbers');
-      return;
-    }
 
     if (currNum < prevNum) {
       setError(`Current reading (${currNum}) cannot be less than previous reading (${prevNum})`);
@@ -138,27 +97,23 @@ export default function MeterReadings() {
 
     try {
       setSubmitting(true);
-      await axios.post(API_READINGS, {
+      await api.post('/readings', {
         unitId: selectedUnitId,
         month,
         previousReading: prevNum,
         currentReading: currNum
-      }, authHeader());
+      });
 
-      triggerToast('Meter reading recorded successfully!', 'success');
+      toast.success('Meter reading recorded successfully!');
       setCurrentReading('');
       
-      // Refresh readings history & auto update previous reading
-      const res = await axios.get(`${API_READINGS}/unit/${selectedUnitId}`, authHeader());
+      const res = await api.get(`/readings/unit/${selectedUnitId}`);
       setReadingsHistory(res.data);
-      if (res.data && res.data.length > 0) {
-        setPreviousReading(res.data[0].currentReading);
-      }
+      if (res.data.length > 0) setPreviousReading(res.data[0].currentReading);
     } catch (err) {
-      console.error(err);
       const msg = err.response?.data?.message || 'Failed to save meter reading';
       setError(msg);
-      triggerToast(msg, 'error');
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -168,20 +123,6 @@ export default function MeterReadings() {
 
   return (
     <div className="min-h-screen bg-gray-50/50 flex flex-col font-sans">
-      {/* Toast Notification */}
-      {toast.show && (
-        <div className={`fixed top-5 right-5 z-50 px-5 py-3 rounded-xl shadow-lg border text-sm font-medium transition-all duration-300 transform translate-y-0 ${
-          toast.type === 'success' 
-            ? 'bg-emerald-50 text-emerald-800 border-emerald-200 shadow-emerald-900/5' 
-            : 'bg-rose-50 text-rose-800 border-rose-200 shadow-rose-900/5'
-        }`}>
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-            {toast.message}
-          </div>
-        </div>
-      )}
-
       {/* Top Header / Navigation */}
       <nav className="bg-white border-b border-gray-200/80 sticky top-0 z-40 backdrop-blur-md bg-white/95">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -248,9 +189,7 @@ export default function MeterReadings() {
               </h2>
 
               {loadingUnits ? (
-                <div className="py-12 text-center text-sm text-gray-500 animate-pulse">
-                  Loading rental units...
-                </div>
+                <LoadingSpinner center label="Loading rental units..." />
               ) : units.length === 0 ? (
                 <div className="py-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200 p-6">
                   <p className="text-sm text-gray-600 mb-3">No rental units found.</p>
@@ -305,8 +244,8 @@ export default function MeterReadings() {
                       <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Previous Reading
                       </label>
-                      <span className="text-[11px] text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded-full">
-                        {fetchingPrevious ? 'Fetching...' : 'Auto-Fetched'}
+                      <span className="text-[11px] text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                        {fetchingPrevious ? <LoadingSpinner size="sm" label="Fetching..." /> : 'Auto-Fetched'}
                       </span>
                     </div>
                     <input
@@ -360,6 +299,17 @@ export default function MeterReadings() {
                           ⚡
                         </div>
                       </div>
+                      {consumption >= 0 && (
+                        <div className="mt-3 pt-3 border-t border-blue-200/60 flex items-center justify-between">
+                          <span className="text-xs text-blue-700 font-medium">Ready for bill calculation</span>
+                          <GenerateBillButton
+                            unitId={selectedUnitId}
+                            month={month}
+                            consumption={consumption}
+                            variant="primary"
+                          />
+                        </div>
+                      )}
                       {consumption < 0 && (
                         <p className="text-xs text-rose-600 font-medium mt-2">
                           Warning: Current reading is less than previous reading!
@@ -372,9 +322,9 @@ export default function MeterReadings() {
                   <button
                     type="submit"
                     disabled={submitting || (consumption !== null && consumption < 0)}
-                    className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-sm rounded-xl shadow-md hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 transition-all cursor-pointer"
+                    className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-sm rounded-xl shadow-md hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center justify-center"
                   >
-                    {submitting ? 'Recording Reading...' : 'Save Meter Reading'}
+                    {submitting ? <LoadingSpinner size="sm" color="white" label="Recording Reading..." /> : 'Save Meter Reading'}
                   </button>
                 </form>
               )}
@@ -420,6 +370,7 @@ export default function MeterReadings() {
                         <th className="pb-3 px-2 text-right">Current</th>
                         <th className="pb-3 px-2 text-right">Consumption</th>
                         <th className="pb-3 px-2 text-right">Date Logged</th>
+                        <th className="pb-3 px-2 text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
@@ -443,6 +394,15 @@ export default function MeterReadings() {
                             </td>
                             <td className="py-3.5 px-2 text-right text-xs text-gray-400">
                               {new Date(reading.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="py-3.5 px-2 text-right">
+                              <GenerateBillButton
+                                readingId={reading._id}
+                                unitId={selectedUnitId}
+                                month={reading.month}
+                                consumption={unitsConsumed}
+                                variant="table"
+                              />
                             </td>
                           </tr>
                         );
