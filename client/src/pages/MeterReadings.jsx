@@ -18,6 +18,11 @@ export default function MeterReadings() {
   const [currentReading, setCurrentReading] = useState('');
   const [readingsHistory, setReadingsHistory] = useState([]);
   
+  // Dynamic Utility Charge Inputs
+  const [electricityRate, setElectricityRate] = useState(10);
+  const [waterCharges, setWaterCharges] = useState(300);
+  const [maintenanceFee, setMaintenanceFee] = useState(500);
+
   const [loadingUnits, setLoadingUnits] = useState(true);
   const [fetchingPrevious, setFetchingPrevious] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -277,6 +282,43 @@ export default function MeterReadings() {
                     />
                   </div>
 
+                  {/* Utility Rates & Extra Charges Inputs */}
+                  <div className="pt-2 border-t border-gray-100 grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-600 uppercase mb-1">Rate (₹/unit)</label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={electricityRate}
+                        onChange={(e) => setElectricityRate(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-300 rounded-lg text-xs font-medium text-gray-800"
+                        placeholder="10"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-600 uppercase mb-1">Water (₹)</label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={waterCharges}
+                        onChange={(e) => setWaterCharges(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-300 rounded-lg text-xs font-medium text-gray-800"
+                        placeholder="300"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-semibold text-gray-600 uppercase mb-1">Maintenance (₹)</label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={maintenanceFee}
+                        onChange={(e) => setMaintenanceFee(e.target.value)}
+                        className="w-full px-2.5 py-1.5 bg-gray-50 border border-gray-300 rounded-lg text-xs font-medium text-gray-800"
+                        placeholder="500"
+                      />
+                    </div>
+                  </div>
+
                   {/* Consumption Highlight Card */}
                   {consumption !== null && (
                     <div className={`p-4 rounded-xl border transition-all ${
@@ -304,8 +346,12 @@ export default function MeterReadings() {
                           <span className="text-xs text-blue-700 font-medium">Ready for bill calculation</span>
                           <GenerateBillButton
                             unitId={selectedUnitId}
+                            unitRent={selectedUnit?.rentAmount || 0}
                             month={month}
                             consumption={consumption}
+                            electricityRate={Number(electricityRate) || 0}
+                            water={Number(waterCharges) || 0}
+                            maintenance={Number(maintenanceFee) || 0}
                             variant="primary"
                           />
                         </div>
@@ -399,8 +445,12 @@ export default function MeterReadings() {
                               <GenerateBillButton
                                 readingId={reading._id}
                                 unitId={selectedUnitId}
+                                unitRent={selectedUnit?.rentAmount || 0}
                                 month={reading.month}
                                 consumption={unitsConsumed}
+                                electricityRate={Number(electricityRate) || 0}
+                                water={Number(waterCharges) || 0}
+                                maintenance={Number(maintenanceFee) || 0}
                                 variant="table"
                               />
                             </td>
