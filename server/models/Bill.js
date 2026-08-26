@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const billSchema = new mongoose.Schema({
   unitId: { type: mongoose.Schema.Types.ObjectId, ref: 'RentalUnit', required: true },
-  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: true },
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant' },
   month: { type: String, required: true },
   invoiceNumber: { type: String, required: true, unique: true },
   rent: Number,
