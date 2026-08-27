@@ -99,4 +99,20 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+router.get('/unit/:unitId', auth, async (req, res) => {
+  try {
+    const bills = await Bill.find({ unitId: req.params.unitId })
+      .populate('unitId')
+      .populate('tenantId')
+      .sort({ month: -1 });
+
+    res.json(bills);
+  } catch (err) {
+    console.error('Error fetching unit bill history:', err);
+    res.status(500).json({
+      message: 'Server error while fetching unit bill history'
+    });
+  }
+});
+
 export default router;
