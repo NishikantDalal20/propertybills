@@ -7,6 +7,7 @@ import Properties from './pages/Properties';
 import PropertyDetail from './pages/PropertyDetail';
 import Tenants from './pages/Tenants';
 import MeterReadings from './pages/MeterReadings';
+import Bills from './pages/Bills';
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
         <Route path="/properties/:id" element={<PropertyDetail />} />
         <Route path="/tenants" element={<Tenants />} />
         <Route path="/readings" element={<MeterReadings />} />
+        <Route path="/bills" element={<Bills />} />
       </Routes>
     </BrowserRouter>
   );

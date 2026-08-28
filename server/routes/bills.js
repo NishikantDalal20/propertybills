@@ -115,4 +115,24 @@ router.get('/unit/:unitId', auth, async (req, res) => {
   }
 });
 
+router.patch('/:id/status', auth, async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!['Pending', 'Paid', 'Partial', 'Overdue'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid bill status' });
+    }
+    const bill = await Bill.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    ).populate('unitId tenantId');
+
+    if (!bill) return res.status(404).json({ message: 'Bill not found' });
+    res.json(bill);
+  } catch (err) {
+    console.error('Error updating bill status:', err);
+    res.status(500).json({ message: 'Server error while updating bill status' });
+  }
+});
+
 export default router;
