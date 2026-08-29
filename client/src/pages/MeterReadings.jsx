@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
 import Navbar from '../components/Navbar';
@@ -18,7 +17,7 @@ export default function MeterReadings() {
   const [previousReading, setPreviousReading] = useState(0);
   const [currentReading, setCurrentReading] = useState('');
   const [readingsHistory, setReadingsHistory] = useState([]);
-  
+
   // Dynamic Utility Charge Inputs
   const [electricityRate, setElectricityRate] = useState(10);
   const [waterCharges, setWaterCharges] = useState(300);
@@ -28,9 +27,6 @@ export default function MeterReadings() {
   const [fetchingPrevious, setFetchingPrevious] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   useEffect(() => {
     const fetchUnits = async () => {
@@ -112,7 +108,7 @@ export default function MeterReadings() {
 
       toast.success('Meter reading recorded successfully!');
       setCurrentReading('');
-      
+
       const res = await api.get(`/readings/unit/${selectedUnitId}`);
       setReadingsHistory(res.data);
       if (res.data.length > 0) setPreviousReading(res.data[0].currentReading);
@@ -286,11 +282,10 @@ export default function MeterReadings() {
 
                   {/* Consumption Highlight Card */}
                   {consumption !== null && (
-                    <div className={`p-4 rounded-xl border transition-all ${
-                      consumption < 0 
-                        ? 'bg-rose-50 border-rose-200 text-rose-800' 
+                    <div className={`p-4 rounded-xl border transition-all ${consumption < 0
+                        ? 'bg-rose-50 border-rose-200 text-rose-800'
                         : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-900'
-                    }`}>
+                      }`}>
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 block">
@@ -300,9 +295,8 @@ export default function MeterReadings() {
                             {consumption >= 0 ? `${consumption.toLocaleString()} units` : 'Invalid Reading'}
                           </span>
                         </div>
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${
-                          consumption < 0 ? 'bg-rose-100 text-rose-600' : 'bg-blue-100 text-blue-600'
-                        }`}>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg ${consumption < 0 ? 'bg-rose-100 text-rose-600' : 'bg-blue-100 text-blue-600'
+                          }`}>
                           ⚡
                         </div>
                       </div>
@@ -349,7 +343,7 @@ export default function MeterReadings() {
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">Readings History</h2>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {selectedUnit 
+                    {selectedUnit
                       ? `Readings for ${selectedUnit.propertyId?.name || 'Property'} - Unit ${selectedUnit.unitNumber}`
                       : 'Select a unit to view history'}
                   </p>

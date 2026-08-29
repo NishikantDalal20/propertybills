@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -38,16 +39,62 @@ function App() {
         }}
       />
       <Routes>
+        {/* Public Routes */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/properties" element={<Properties />} />
-        <Route path="/properties/:id" element={<PropertyDetail />} />
-        <Route path="/tenants" element={<Tenants />} />
-        <Route path="/readings" element={<MeterReadings />} />
-        <Route path="/bills" element={<Bills />} />
+
+        {/* Protected Application Routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/properties"
+          element={
+            <ProtectedRoute>
+              <Properties />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/properties/:id"
+          element={
+            <ProtectedRoute>
+              <PropertyDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tenants"
+          element={
+            <ProtectedRoute>
+              <Tenants />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/readings"
+          element={
+            <ProtectedRoute>
+              <MeterReadings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bills"
+          element={
+            <ProtectedRoute>
+              <Bills />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
 }
+
 export default App;

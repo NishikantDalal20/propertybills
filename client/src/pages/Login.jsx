@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
 import toast from 'react-hot-toast';
+import { useAuth } from '../hooks/useAuth';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -16,9 +17,7 @@ export default function Login() {
     setError('');
 
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', form);
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
+      await login(form);
       toast.success('Logged in successfully!');
       navigate('/dashboard');
     } catch (err) {
@@ -31,11 +30,11 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50/50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50/50 p-4 font-sans">
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl border border-gray-200/80 shadow-sm w-full max-w-md">
         <h1 className="text-2xl font-bold mb-2 text-gray-900">Welcome Back</h1>
         <p className="text-xs text-gray-500 mb-6">Sign in to manage your property bills and readings.</p>
-        
+
         {error && (
           <div className="p-3 mb-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
             {error}
@@ -49,7 +48,8 @@ export default function Login() {
               type="email"
               placeholder="Email"
               required
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-gray-800"
+              value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
           </div>
@@ -60,7 +60,8 @@ export default function Login() {
               type="password"
               placeholder="Password"
               required
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-gray-800"
+              value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
           </div>

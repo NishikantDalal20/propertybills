@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import Navbar from '../components/Navbar';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchSummary = async () => {
