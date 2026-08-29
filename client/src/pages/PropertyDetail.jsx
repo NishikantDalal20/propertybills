@@ -1,20 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
-import StatusBadge from '../components/StatusBadge';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Navbar from '../components/Navbar';
 
 export default function PropertyDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
 
   const [property, setProperty] = useState(null);
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   const [unitForm, setUnitForm] = useState({
     unitNumber: '',
@@ -33,9 +29,8 @@ export default function PropertyDetail() {
       ]);
       setProperty(propRes.data);
       setUnits(unitsRes.data);
-      setError('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load property details');
+      toast.error(err.response?.data?.message || 'Failed to load property details');
     } finally {
       setLoading(false);
     }
@@ -91,7 +86,7 @@ export default function PropertyDetail() {
         <Link to="/properties" className="text-sm font-medium text-blue-600 hover:text-blue-800 mb-6 inline-flex items-center gap-1.5 transition-colors">
           &larr; Back to Properties
         </Link>
-        
+
         {property && (
           <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm mb-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

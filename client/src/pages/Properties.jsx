@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
 import Navbar from '../components/Navbar';
@@ -9,19 +9,14 @@ export default function Properties() {
   const [properties, setProperties] = useState([]);
   const [form, setForm] = useState({ name: '', address: '', type: 'House' });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
 
   const fetchProperties = async () => {
     try {
       setLoading(true);
       const res = await api.get('/properties');
       setProperties(res.data);
-      setError('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch properties');
+      toast.error(err.response?.data?.message || 'Failed to fetch properties');
     } finally {
       setLoading(false);
     }
@@ -48,7 +43,7 @@ export default function Properties() {
       await api.delete(`/properties/${id}`);
       toast.success('Property deleted successfully');
       fetchProperties();
-    } catch (err) {
+    } catch {
       toast.error('Failed to delete property');
     }
   };
@@ -56,26 +51,6 @@ export default function Properties() {
   return (
     <div className="min-h-screen bg-gray-50/50 flex flex-col font-sans">
       <Navbar />
-
-      {/* Toast Notification */}
-      {toast.show && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-md transition-all duration-300 transform translate-y-0 ${
-          toast.type === 'success' 
-            ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800' 
-            : 'bg-rose-50/95 border-rose-200 text-rose-800'
-        }`}>
-          {toast.type === 'success' ? (
-            <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          )}
-          <span className="text-sm font-semibold">{toast.message}</span>
-        </div>
-      )}
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8">

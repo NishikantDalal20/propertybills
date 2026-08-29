@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
 import Navbar from '../components/Navbar';
@@ -12,13 +11,10 @@ export default function Bills() {
   const [selectedMonth, setSelectedMonth] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const [previewBill, setPreviewBill] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
-
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   const fetchBills = async () => {
     try {
@@ -54,13 +50,13 @@ export default function Bills() {
   const filteredBills = bills.filter(bill => {
     const matchesMonth = selectedMonth === 'All' || bill.month === selectedMonth;
     const matchesStatus = selectedStatus === 'All' || bill.status === selectedStatus;
-    
+
     const unitName = bill.unitId?.unitNumber ? `Unit ${bill.unitId.unitNumber}` : '';
     const tenantName = bill.tenantId?.name || '';
     const invNum = bill.invoiceNumber || '';
     const query = searchQuery.toLowerCase().trim();
-    
-    const matchesQuery = !query || 
+
+    const matchesQuery = !query ||
       invNum.toLowerCase().includes(query) ||
       unitName.toLowerCase().includes(query) ||
       tenantName.toLowerCase().includes(query);
@@ -248,13 +244,12 @@ export default function Bills() {
                           ₹{(bill.totalAmount || 0).toLocaleString('en-IN')}
                         </td>
                         <td className="py-3.5 px-4 text-center">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                            isPaid
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${isPaid
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                               : bill.status === 'Overdue'
-                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                              : 'bg-amber-50 text-amber-700 border border-amber-200'
-                          }`}>
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200'
+                            }`}>
                             {bill.status}
                           </span>
                         </td>
@@ -263,11 +258,10 @@ export default function Bills() {
                             <button
                               onClick={() => handleStatusUpdate(bill._id, isPaid ? 'Pending' : 'Paid')}
                               disabled={updatingId === bill._id}
-                              className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all cursor-pointer ${
-                                isPaid
+                              className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg border transition-all cursor-pointer ${isPaid
                                   ? 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                                   : 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
-                              }`}
+                                }`}
                             >
                               {updatingId === bill._id ? 'Updating...' : isPaid ? 'Mark Pending' : 'Mark Paid'}
                             </button>

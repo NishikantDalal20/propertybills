@@ -64,7 +64,7 @@ export default function GenerateBillButton({
     } catch (err) {
       if (err.response?.status === 400 || err.response?.status === 404 || err.response?.status === 501 || err.code === 'ERR_BAD_REQUEST' || !err.response) {
         await new Promise((resolve) => setTimeout(resolve, 800));
-        
+
         const rentFee = Number(unitRent) || 0;
         const rate = Number(electricityRate) || 0;
         const waterFee = Number(water) || 0;
@@ -108,9 +108,8 @@ export default function GenerateBillButton({
   const isPrimary = variant === 'primary';
   const baseClasses = isPrimary
     ? 'inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-xl shadow-md hover:shadow-lg focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer'
-    : `inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer shadow-sm ${
-        generated ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200/80'
-      } disabled:opacity-50 disabled:cursor-not-allowed`;
+    : `inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer shadow-sm ${generated ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200/80'
+    } disabled:opacity-50 disabled:cursor-not-allowed`;
 
   return (
     <>
