@@ -45,7 +45,7 @@ export default function BillPreviewModal({ bill, isOpen, onClose }) {
             <div>
               <span className="text-gray-400 font-medium block uppercase tracking-wider text-[10px]">Rental Unit</span>
               <span className="font-bold text-gray-800 text-sm mt-0.5 block">
-                {bill.unitId && typeof bill.unitId === 'object' ? `Unit ${bill.unitId.unitNumber}` : 'Rental Unit'}
+                {typeof bill.unitId === 'object' ? `Unit ${bill.unitId.unitNumber}` : 'Rental Unit'}
               </span>
             </div>
             <div className="text-right">

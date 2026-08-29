@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
 import Navbar from '../components/Navbar';
@@ -13,9 +12,6 @@ export default function Tenants() {
   const [form, setForm] = useState({ name: '', phone: '', email: '', status: 'Active' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
 
   const fetchTenants = async () => {
     try {
@@ -130,7 +126,7 @@ export default function Tenants() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8">
-        
+
         {/* Title Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Tenants Directory</h1>
@@ -229,12 +225,12 @@ export default function Tenants() {
             <div className="divide-y divide-gray-100">
               {filteredTenants.map(t => (
                 <div key={t._id} className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:bg-gray-50/50 transition-colors">
-                  
+
                   {/* Tenant Identity & Metadata */}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1.5">
                       <h3 className="font-bold text-gray-900 text-lg truncate">{t.name}</h3>
-                      
+
                       {/* Status Badges */}
                       {t.unitId && (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -245,17 +241,16 @@ export default function Tenants() {
                       <button
                         onClick={() => handleToggleStatus(t._id, t.status)}
                         title="Click to toggle status"
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border transition-all cursor-pointer hover:opacity-80 active:scale-95 ${
-                          t.status === 'Active'
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border transition-all cursor-pointer hover:opacity-80 active:scale-95 ${t.status === 'Active'
                             ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
                             : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
-                        }`}
+                          }`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${t.status === 'Active' ? 'bg-blue-500' : 'bg-gray-400'}`}></span>
                         {t.status}
                       </button>
                     </div>
-                    
+
                     <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-500">
                       {t.phone && (
                         <span className="flex items-center gap-1.5">
@@ -278,7 +273,7 @@ export default function Tenants() {
 
                   {/* Actions Column */}
                   <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                    
+
                     {/* Inline Assignment Form */}
                     {!t.unitId && t.status === 'Active' && (
                       <div className="flex items-center gap-2 w-full sm:w-auto">
