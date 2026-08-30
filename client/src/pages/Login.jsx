@@ -31,54 +31,60 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50/50 p-4 font-sans">
-      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl border border-gray-200/80 shadow-sm w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-2 text-gray-900">Welcome Back</h1>
-        <p className="text-xs text-gray-500 mb-6">Sign in to manage your property bills and readings.</p>
+      <div className="bg-white rounded-3xl border border-gray-200/80 shadow-xl max-w-md w-full p-8">
+        <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
+        <p className="text-xs text-gray-500 mt-1 mb-6">
+          Sign in to manage your property bills and readings.
+        </p>
 
-        {error && (
-          <div className="p-3 mb-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
-            {error}
-          </div>
-        )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+              {error}
+            </div>
+          )}
 
-        <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Email</label>
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+              Email
+            </label>
             <input
               type="email"
-              placeholder="Email"
+              placeholder="Email address"
               required
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-gray-800"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="w-full px-3.5 py-2.5 bg-gray-50/50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Password</label>
+            <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+              Password
+            </label>
             <input
               type="password"
               placeholder="Password"
               required
-              className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-medium text-gray-800"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="w-full px-3.5 py-2.5 bg-gray-50/50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold text-sm rounded-xl shadow-sm hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all cursor-pointer inline-flex items-center justify-center"
+            className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-sm rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
           >
             {loading ? <LoadingSpinner size="sm" color="white" label="Signing in..." /> : 'Login'}
           </button>
-        </div>
+        </form>
 
-        <p className="mt-6 text-xs text-center text-gray-500">
+        <p className="text-xs text-center text-gray-500 mt-6">
           No account? <Link to="/register" className="text-blue-600 font-semibold hover:underline">Register here</Link>
         </p>
-      </form>
+      </div>
     </div>
   );
 }
