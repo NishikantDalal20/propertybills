@@ -30,13 +30,12 @@ export default function Navbar() {
     return location.pathname === path;
   };
 
-  // Safely extract user profile details
   const currentUser = user?.user || user || {};
   const displayName = currentUser?.name || 'Landlord';
   const displayEmail = currentUser?.email || '';
 
   return (
-    <nav className="bg-white border-b border-gray-200/80 sticky top-0 z-50 backdrop-blur-md bg-white/95">
+    <nav className="bg-white border-b border-gray-200/80 sticky top-0 z-50 backdrop-blur-md bg-white/95 font-sans">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Brand Logo & Desktop Nav Links */}
         <div className="flex items-center gap-8">
@@ -51,10 +50,11 @@ export default function Navbar() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`px-4 py-2 rounded-lg text-sm transition-all ${active
+                  className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                    active
                       ? 'font-semibold bg-blue-50 text-blue-600'
                       : 'font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/80'
-                    }`}
+                  }`}
                 >
                   {item.name}
                 </Link>
@@ -109,10 +109,11 @@ export default function Navbar() {
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-2.5 rounded-xl text-sm transition-all ${active
+                className={`block px-4 py-2.5 rounded-xl text-sm transition-all ${
+                  active
                     ? 'font-semibold bg-blue-50 text-blue-600'
                     : 'font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/80'
-                  }`}
+                }`}
               >
                 {item.name}
               </Link>
