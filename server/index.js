@@ -23,7 +23,7 @@ app.use('/api/tenants', tenantRoutes);
 app.use('/api/readings', readingRoutes);
 app.use('/api/bills', billRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/payments', paymentRoutes);
+
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
