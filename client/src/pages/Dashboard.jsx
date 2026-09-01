@@ -10,6 +10,9 @@ export default function Dashboard() {
   const [error, setError] = useState('');
   const { user } = useAuth();
 
+  const currentUser = user?.user || user || {};
+  const displayName = currentUser?.name || 'Landlord';
+
   useEffect(() => {
     const fetchSummary = async () => {
       try {
@@ -37,7 +40,7 @@ export default function Dashboard() {
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 mb-8 text-white shadow-md relative overflow-hidden">
           <div className="absolute right-0 top-0 w-64 h-64 bg-white/5 rounded-full blur-2xl -mr-16 -mt-16 pointer-events-none"></div>
           <div className="relative z-10">
-            <h1 className="text-3xl font-bold tracking-tight">Welcome back, {user?.name}!</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Welcome back, {displayName}!</h1>
             <p className="text-blue-100 mt-2 max-w-md">
               Here is an overview of your rental properties and unit occupancies for today.
             </p>
@@ -50,118 +53,111 @@ export default function Dashboard() {
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
+                <p className="text-sm font-medium text-red-800">{error}</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Stats Grid */}
+        {/* Metrics Overview Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm animate-pulse">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="h-4 bg-gray-200 rounded w-24"></div>
-                  <div className="h-10 w-10 bg-gray-200 rounded-lg"></div>
-                </div>
-                <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-32"></div>
-              </div>
+              <div key={i} className="h-32 rounded-2xl bg-gray-200/80 animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Card 1: Total Properties */}
-            <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex flex-col justify-between group">
-              <div>
-                <div className="flex justify-between items-start mb-4">
-                  <span className="text-sm font-semibold text-gray-500">Total Properties</span>
-                  <div className="p-3 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                </div>
-                <span className="text-3xl font-bold text-gray-900 tracking-tight">
-                  {stats?.totalProperties || 0}
-                </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Properties</span>
+                <span className="p-2 bg-blue-50 text-blue-600 rounded-xl text-lg">🏢</span>
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <Link to="/properties" className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                  Manage properties &rarr;
-                </Link>
-              </div>
+              <p className="text-3xl font-bold text-gray-900 mt-3">{stats?.totalProperties || 0}</p>
+              <p className="text-xs text-gray-500 mt-1">Managed locations</p>
             </div>
 
-            {/* Card 2: Total Units */}
-            <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex flex-col justify-between group">
-              <div>
-                <div className="flex justify-between items-start mb-4">
-                  <span className="text-sm font-semibold text-gray-500">Total Rental Units</span>
-                  <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                  </div>
-                </div>
-                <span className="text-3xl font-bold text-gray-900 tracking-tight">
-                  {stats?.totalUnits || 0}
-                </span>
+            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Total Units</span>
+                <span className="p-2 bg-indigo-50 text-indigo-600 rounded-xl text-lg">🚪</span>
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <span className="text-xs text-gray-400">Across all registered locations</span>
-              </div>
+              <p className="text-3xl font-bold text-gray-900 mt-3">{stats?.totalUnits || 0}</p>
+              <p className="text-xs text-gray-500 mt-1">Across all properties</p>
             </div>
 
-            {/* Card 3: Occupied Units */}
-            <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex flex-col justify-between group">
-              <div>
-                <div className="flex justify-between items-start mb-4">
-                  <span className="text-sm font-semibold text-gray-500">Occupied Units</span>
-                  <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <span className="text-3xl font-bold text-gray-900 tracking-tight">
-                  {stats?.occupiedUnits || 0}
-                </span>
+            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Occupied Units</span>
+                <span className="p-2 bg-emerald-50 text-emerald-600 rounded-xl text-lg">🔑</span>
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-xs text-gray-500">
-                  {stats?.totalUnits ? Math.round((stats.occupiedUnits / stats.totalUnits) * 100) : 0}% Occupancy rate
-                </span>
-              </div>
+              <p className="text-3xl font-bold text-emerald-600 mt-3">{stats?.occupiedUnits || 0}</p>
+              <p className="text-xs text-gray-500 mt-1">Currently rented</p>
             </div>
 
-            {/* Card 4: Vacant Units */}
-            <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300 flex flex-col justify-between group">
-              <div>
-                <div className="flex justify-between items-start mb-4">
-                  <span className="text-sm font-semibold text-gray-500">Vacant Units</span>
-                  <div className="p-3 bg-amber-50 text-amber-600 rounded-xl group-hover:bg-amber-600 group-hover:text-white transition-all duration-300">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                </div>
-                <span className="text-3xl font-bold text-gray-900 tracking-tight">
-                  {stats?.vacantUnits || 0}
-                </span>
+            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Vacant Units</span>
+                <span className="p-2 bg-amber-50 text-amber-600 rounded-xl text-lg">⚠️</span>
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <span className="text-xs text-amber-600 font-medium">Ready for immediate lease</span>
-              </div>
+              <p className="text-3xl font-bold text-amber-600 mt-3">{stats?.vacantUnits || 0}</p>
+              <p className="text-xs text-gray-500 mt-1">Ready for tenants</p>
             </div>
           </div>
         )}
+
+        {/* Quick Action Navigation Grid */}
+        <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Management</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Link to="/properties" className="group">
+            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all h-full flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                  🏢
+                </div>
+                <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Properties & Units</h3>
+                <p className="text-xs text-gray-500 mt-1">Add new properties, view unit details, and configure monthly rental amounts.</p>
+              </div>
+              <span className="text-xs font-semibold text-blue-600 mt-6 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                Manage Properties &rarr;
+              </span>
+            </div>
+          </Link>
+
+          <Link to="/tenants" className="group">
+            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all h-full flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                  👥
+                </div>
+                <h3 className="text-base font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">Tenants Directory</h3>
+                <p className="text-xs text-gray-500 mt-1">Register active tenants, assign them to vacant units, and update lease details.</p>
+              </div>
+              <span className="text-xs font-semibold text-emerald-600 mt-6 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                View Tenants &rarr;
+              </span>
+            </div>
+          </Link>
+
+          <Link to="/readings" className="group">
+            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all h-full flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                  ⚡
+                </div>
+                <h3 className="text-base font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">Meter Readings</h3>
+                <p className="text-xs text-gray-500 mt-1">Log monthly electric meter readings, calculate consumption, and generate bills.</p>
+              </div>
+              <span className="text-xs font-semibold text-indigo-600 mt-6 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                Record Readings &rarr;
+              </span>
+            </div>
+          </Link>
+        </div>
       </main>
     </div>
   );
