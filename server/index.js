@@ -8,6 +8,7 @@ import unitRoutes from './routes/units.js';
 import tenantRoutes from './routes/tenants.js';
 import readingRoutes from './routes/readings.js';
 import billRoutes from './routes/bills.js';
+import paymentRoutes from './routes/payments.js';
 
 const app = express();
 app.use(cors());
@@ -21,6 +22,8 @@ app.use('/api/units', unitRoutes);
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/readings', readingRoutes);
 app.use('/api/bills', billRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/payments', paymentRoutes);
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
