@@ -1,8 +1,21 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import StatusBadge from './StatusBadge';
-import LoadingSpinner from './LoadingSpinner';
 
 export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, onUpdate }) {
   const [bill, setBill] = useState(initialBill);
@@ -41,7 +54,7 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
     fetchPayments();
   }, [bill?._id, isOpen, bill?.status, bill?.totalAmount]);
 
-  if (!isOpen || !bill) return null;
+  if (!bill) return null;
 
   const rent = bill.rent || 0;
   const electricity = bill.electricity || 0;
@@ -104,28 +117,22 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-white rounded-3xl border border-gray-200/80 shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-lg">
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-900 to-indigo-950 p-6 text-white flex justify-between items-start">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-semibold uppercase tracking-widest text-indigo-300">Invoice</span>
-              <StatusBadge status={bill.status || 'Generated'} />
-            </div>
-            <h2 className="text-xl font-black tracking-tight">{bill.invoiceNumber || 'INV-PREVIEW'}</h2>
-            <p className="text-xs text-gray-300 mt-1">Billing Month: <span className="font-semibold text-white">{bill.month}</span></p>
+        <DialogHeader className="relative">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-semibold uppercase tracking-widest text-indigo-300">Invoice Detail</span>
+            <StatusBadge status={bill.status || 'Pending'} />
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-white/10 transition-all cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
+          <DialogTitle>{bill.invoiceNumber || 'INV-PREVIEW'}</DialogTitle>
+          <DialogDescription>
+            Billing Month: <span className="font-semibold text-white">{bill.month}</span>
+          </DialogDescription>
+        </DialogHeader>
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto space-y-6 flex-1">
+        <div className="p-6 overflow-y-auto space-y-6 flex-1 max-h-[70vh]">
           {/* Tenant / Unit Meta Card */}
           <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200/70 flex justify-between text-xs">
             <div>
@@ -137,12 +144,12 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
             <div className="text-right">
               <span className="text-gray-400 font-medium block uppercase tracking-wider text-[10px]">Issue Date</span>
               <span className="font-semibold text-gray-700 mt-0.5 block">
-                {new Date(bill.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                {bill.createdAt ? new Date(bill.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
               </span>
             </div>
           </div>
 
-          {/* Itemized Breakdown List */}
+          {/* Breakdown List */}
           <div>
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Itemized Breakdown</h3>
             <div className="divide-y divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden bg-white text-sm">
@@ -237,106 +244,86 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Payment Records</h3>
               {!showPaymentForm && bill.status !== 'Paid' && (
-                <button
-                  type="button"
-                  onClick={handleOpenPaymentForm}
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
-                >
+                <Button variant="success" size="sm" onClick={handleOpenPaymentForm} className="text-xs h-8">
                   + Record Payment
-                </button>
+                </Button>
               )}
             </div>
 
             {/* Record Payment Form */}
             {showPaymentForm && (
-              <form onSubmit={handleRecordPayment} className="p-4 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl space-y-3.5 mb-4">
-                <h4 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">Record Payment Form</h4>
+              <form onSubmit={handleRecordPayment} className="p-4 bg-emerald-50/50 border border-emerald-200/80 rounded-2xl space-y-4 mb-4">
+                <h4 className="text-xs font-bold text-emerald-900 uppercase tracking-wider">Record New Payment Entry</h4>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                      Amount Paid (₹) <span className="text-rose-500">*</span>
-                    </label>
-                    <input
+                    <Label htmlFor="amountPaid">Amount Paid (₹)</Label>
+                    <Input
+                      id="amountPaid"
                       type="number"
                       placeholder="e.g. 5000"
                       required
                       min="1"
                       value={paymentForm.amountPaid}
                       onChange={(e) => setPaymentForm({ ...paymentForm, amountPaid: e.target.value })}
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                      Payment Method <span className="text-rose-500">*</span>
-                    </label>
-                    <select
+                    <Label htmlFor="paymentMethod">Payment Method</Label>
+                    <Select
+                      id="paymentMethod"
                       value={paymentForm.method}
                       onChange={(e) => setPaymentForm({ ...paymentForm, method: e.target.value })}
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 cursor-pointer"
                     >
                       <option value="UPI">UPI / GPay / PhonePe</option>
                       <option value="Cash">Cash</option>
                       <option value="Bank Transfer">Bank Transfer (NEFT/IMPS)</option>
                       <option value="Cheque">Cheque</option>
                       <option value="Card">Credit/Debit Card</option>
-                    </select>
+                    </Select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                    Transaction Ref (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. UPI UTR #9283748291"
+                  <Label htmlFor="transactionRef">Transaction Ref / Note (Optional)</Label>
+                  <Input
+                    id="transactionRef"
+                    placeholder="e.g. UPI Ref #9283748291"
                     value={paymentForm.transactionRef}
                     onChange={(e) => setPaymentForm({ ...paymentForm, transactionRef: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
                   />
                 </div>
 
                 <div className="flex justify-end gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowPaymentForm(false)}
-                    className="px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-200/60 rounded-xl transition-all cursor-pointer"
-                  >
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowPaymentForm(false)}>
                     Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submittingPayment}
-                    className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-50 inline-flex items-center gap-1.5"
-                  >
-                    {submittingPayment ? <LoadingSpinner size="sm" color="white" label="Saving..." /> : 'Save Payment'}
-                  </button>
+                  </Button>
+                  <Button type="submit" variant="success" size="sm" disabled={submittingPayment}>
+                    {submittingPayment ? <Spinner size="sm" className="mr-1.5" /> : null}
+                    {submittingPayment ? 'Saving...' : 'Save Payment'}
+                  </Button>
                 </div>
               </form>
             )}
 
-            {/* Past Payment History */}
+            {/* Payments List */}
             {payments.length === 0 ? (
               <p className="text-xs text-gray-400 italic">No payments recorded yet for this invoice.</p>
             ) : (
-              <div className="divide-y divide-gray-100 border border-gray-100 rounded-2xl overflow-hidden text-xs bg-white">
+              <div className="divide-y divide-gray-100 border border-gray-100 rounded-xl overflow-hidden text-xs bg-white">
                 {payments.map((p, idx) => (
                   <div key={p._id || idx} className="p-3 flex justify-between items-center hover:bg-gray-50/50">
                     <div>
-                      <span className="font-bold text-emerald-700 text-sm">{formatCurrency(p.amountPaid)}</span>
+                      <span className="font-bold text-emerald-700">{formatCurrency(p.amountPaid)}</span>
                       <span className="text-gray-400 mx-2">&bull;</span>
-                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-gray-100 text-gray-700 border border-gray-200">
-                        {p.method || 'Cash'}
-                      </span>
+                      <Badge variant="secondary" className="text-[10px] py-0 px-2">{p.method || 'Cash'}</Badge>
                       {p.transactionRef && (
                         <p className="text-[11px] text-gray-500 mt-0.5">Ref: {p.transactionRef}</p>
                       )}
                     </div>
                     <span className="text-gray-400 text-[11px]">
-                      {new Date(p.paymentDate || p.createdAt || Date.now()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                      {p.paymentDate || p.createdAt ? new Date(p.paymentDate || p.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Recently'}
                     </span>
                   </div>
                 ))}
@@ -346,25 +333,19 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end">
-          <button
-            onClick={handlePrint}
-            className="px-4 py-2.5 bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 text-xs font-bold rounded-xl transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
-          >
+        <DialogFooter className="flex gap-3 justify-end">
+          <Button variant="outline" onClick={handlePrint} size="sm" className="gap-1.5">
             <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
             Print / Save
-          </button>
+          </Button>
 
-          <button
-            onClick={onClose}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm"
-          >
+          <Button onClick={onClose} size="sm">
             Close Preview
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

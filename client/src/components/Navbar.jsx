@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
+import { Button } from '@/components/ui/button';
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -70,12 +71,14 @@ export default function Navbar() {
             {displayEmail && <span className="text-xs text-gray-500">{displayEmail}</span>}
           </div>
 
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleLogout}
-            className="hidden sm:inline-flex px-3.5 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200/80 rounded-xl transition-all cursor-pointer"
+            className="hidden sm:inline-flex text-xs"
           >
             Logout
-          </button>
+          </Button>
 
           {/* Mobile Hamburger Button */}
           <button
@@ -120,12 +123,14 @@ export default function Navbar() {
             );
           })}
 
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleLogout}
-            className="w-full text-left px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer mt-2 sm:hidden"
+            className="w-full justify-start text-rose-600 hover:bg-rose-50 sm:hidden"
           >
             Logout
-          </button>
+          </Button>
         </div>
       )}
     </nav>
