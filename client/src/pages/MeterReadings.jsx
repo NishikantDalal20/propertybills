@@ -4,6 +4,11 @@ import api from '../lib/api';
 import Navbar from '../components/Navbar';
 import GenerateBillButton from '../components/GenerateBillButton';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 export default function MeterReadings() {
   const [units, setUnits] = useState([]);
@@ -135,14 +140,14 @@ export default function MeterReadings() {
         {loadingUnits ? (
           <LoadingSpinner center label="Loading rental units..." />
         ) : units.length === 0 ? (
-          <div className="bg-white p-12 rounded-2xl border border-gray-200/80 shadow-sm text-center text-gray-500">
+          <Card className="p-12 text-center text-gray-500">
             <p className="font-medium text-lg">No rental units found</p>
             <p className="text-sm mt-1 text-gray-400">Please add properties and rental units first.</p>
-          </div>
+          </Card>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Form Section */}
-            <div className="lg:col-span-7 bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm">
+            <Card className="lg:col-span-7 p-6">
               <h2 className="text-base font-bold text-gray-900 mb-6 flex items-center gap-2">
                 <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -157,29 +162,27 @@ export default function MeterReadings() {
                     <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
                       Select Rental Unit
                     </label>
-                    <select
+                    <Select
                       value={selectedUnitId}
                       onChange={(e) => setSelectedUnitId(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                     >
                       {units.map((unit) => (
                         <option key={unit._id} value={unit._id}>
                           {unit.propertyId?.name ? `${unit.propertyId.name} - Unit ${unit.unitNumber}` : `Unit ${unit.unitNumber}`}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
                       Billing Month
                     </label>
-                    <input
+                    <Input
                       type="month"
                       value={month}
                       required
                       onChange={(e) => setMonth(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -195,11 +198,11 @@ export default function MeterReadings() {
                         {fetchingPrevious ? <LoadingSpinner size="sm" label="Fetching..." /> : 'Auto-Fetched'}
                       </span>
                     </div>
-                    <input
+                    <Input
                       type="number"
                       value={previousReading}
                       readOnly
-                      className="w-full px-3.5 py-2 bg-gray-100 border border-gray-200 rounded-xl text-sm font-bold text-gray-700"
+                      className="bg-gray-100 font-bold"
                     />
                   </div>
 
@@ -207,14 +210,13 @@ export default function MeterReadings() {
                     <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">
                       Current Reading <span className="text-rose-500">*</span>
                     </label>
-                    <input
+                    <Input
                       type="number"
                       placeholder="Enter current meter reading"
                       value={currentReading}
                       required
                       min={prev}
                       onChange={(e) => setCurrentReading(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     />
                   </div>
                 </div>
@@ -244,29 +246,26 @@ export default function MeterReadings() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <label className="block text-[11px] font-semibold text-gray-600 mb-1">Electricity Rate (₹/Unit)</label>
-                      <input
+                      <Input
                         type="number"
                         value={electricityRate}
                         onChange={(e) => setElectricityRate(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
                     </div>
                     <div>
                       <label className="block text-[11px] font-semibold text-gray-600 mb-1">Water Utility (₹)</label>
-                      <input
+                      <Input
                         type="number"
                         value={waterCharges}
                         onChange={(e) => setWaterCharges(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
                     </div>
                     <div>
                       <label className="block text-[11px] font-semibold text-gray-600 mb-1">Maintenance Fee (₹)</label>
-                      <input
+                      <Input
                         type="number"
                         value={maintenanceFee}
                         onChange={(e) => setMaintenanceFee(e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
                     </div>
                   </div>
@@ -274,13 +273,13 @@ export default function MeterReadings() {
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                  <button
+                  <Button
                     type="submit"
                     disabled={submitting || !isValidConsumption}
-                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm disabled:opacity-50"
+                    className="flex-1"
                   >
                     {submitting ? <LoadingSpinner size="sm" color="white" label="Recording Reading..." /> : 'Save Meter Reading'}
-                  </button>
+                  </Button>
 
                   <GenerateBillButton
                     readingId={readingsHistory[0]?._id}
@@ -296,10 +295,10 @@ export default function MeterReadings() {
                   />
                 </div>
               </form>
-            </div>
+            </Card>
 
             {/* History Table Section */}
-            <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+            <Card className="lg:col-span-5 p-6 overflow-hidden">
               <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center justify-between">
                 <span>Reading History</span>
                 {readingsHistory.length > 0 && (
@@ -314,50 +313,48 @@ export default function MeterReadings() {
                   <p className="text-xs font-medium">No previous reading history for this unit.</p>
                 </div>
               ) : (
-                <div className="relative w-full overflow-auto">
-                  <table className="w-full text-xs text-gray-700 text-left">
-                    <thead className="bg-gray-50/80 text-gray-500 uppercase tracking-wider font-semibold border-b border-gray-200/80">
-                      <tr>
-                        <th className="py-3 px-3">Month</th>
-                        <th className="py-3 px-3 text-right">Readings</th>
-                        <th className="py-3 px-3 text-right">Consumed</th>
-                        <th className="py-3 px-3 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {readingsHistory.map((reading) => {
-                        return (
-                          <tr key={reading._id} className="hover:bg-gray-50/60 transition-all">
-                            <td className="py-3 px-3 font-semibold text-gray-800">
-                              {reading.month}
-                            </td>
-                            <td className="py-3 px-3 text-right font-medium text-gray-600">
-                              {reading.previousReading} &rarr; {reading.currentReading}
-                            </td>
-                            <td className="py-3 px-3 text-right font-bold text-blue-600">
-                              {reading.unitsConsumed} Units
-                            </td>
-                            <td className="py-3 px-3 text-right">
-                              <GenerateBillButton
-                                readingId={reading._id}
-                                unitId={selectedUnitId}
-                                unitRent={selectedUnit?.rentAmount || 0}
-                                month={reading.month}
-                                consumption={reading.unitsConsumed}
-                                electricityRate={electricityRate}
-                                water={waterCharges}
-                                maintenance={maintenanceFee}
-                                variant="table"
-                              />
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Month</TableHead>
+                      <TableHead className="text-right">Readings</TableHead>
+                      <TableHead className="text-right">Consumed</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {readingsHistory.map((reading) => {
+                      return (
+                        <TableRow key={reading._id}>
+                          <TableCell className="font-semibold text-gray-800">
+                            {reading.month}
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-gray-600">
+                            {reading.previousReading} &rarr; {reading.currentReading}
+                          </TableCell>
+                          <TableCell className="text-right font-bold text-blue-600">
+                            {reading.unitsConsumed} Units
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <GenerateBillButton
+                              readingId={reading._id}
+                              unitId={selectedUnitId}
+                              unitRent={selectedUnit?.rentAmount || 0}
+                              month={reading.month}
+                              consumption={reading.unitsConsumed}
+                              electricityRate={electricityRate}
+                              water={waterCharges}
+                              maintenance={maintenanceFee}
+                              variant="table"
+                            />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               )}
-            </div>
+            </Card>
           </div>
         )}
       </main>

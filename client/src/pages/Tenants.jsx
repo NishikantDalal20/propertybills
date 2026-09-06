@@ -4,6 +4,10 @@ import api from '../lib/api';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import StatusBadge from '../components/StatusBadge';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 export default function Tenants() {
   const [tenants, setTenants] = useState([]);
@@ -127,7 +131,7 @@ export default function Tenants() {
         )}
 
         {/* Add Tenant Form Card */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm mb-8">
+        <Card className="p-6 mb-8">
           <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -135,47 +139,42 @@ export default function Tenants() {
             Register New Tenant
           </h2>
           <form onSubmit={handleAddTenant} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <input
+            <Input
               placeholder="Full Name"
               value={form.name}
               required
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="px-3.5 py-2.5 bg-gray-50/50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
-            <input
+            <Input
               placeholder="Phone Number"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="px-3.5 py-2.5 bg-gray-50/50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
-            <input
+            <Input
               type="email"
               placeholder="Email Address"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="px-3.5 py-2.5 bg-gray-50/50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
-            <button type="submit" className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl shadow-sm transition-all cursor-pointer">
+            <Button type="submit">
               Add Tenant
-            </button>
+            </Button>
           </form>
-        </div>
+        </Card>
 
-        {/* Search Bar */}
+        {/* Search & Filter Bar */}
         <div className="mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="w-full md:w-80">
-            <input
-              type="text"
+            <Input
               placeholder="Search by tenant name, unit, property..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
           </div>
         </div>
 
         {/* Tenants Directory List */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+        <Card className="overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <span className="text-sm font-bold text-gray-600">Registered Tenants ({filteredTenants.length})</span>
           </div>
@@ -222,18 +221,20 @@ export default function Tenants() {
                     {/* Unit Assignment Action Controls */}
                     <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
                       {isAssigned ? (
-                        <button
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleUnassignUnit(t._id)}
-                          className="px-3.5 py-1.5 border border-gray-300 text-amber-700 hover:bg-amber-50 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-sm"
+                          className="text-amber-700 hover:bg-amber-50"
                         >
                           Unassign Unit
-                        </button>
+                        </Button>
                       ) : (
                         <div className="flex items-center gap-2 w-full sm:w-auto">
-                          <select
+                          <Select
                             value={selectedUnits[t._id] || ''}
                             onChange={(e) => handleSelectUnit(t._id, e.target.value)}
-                            className="w-full sm:w-48 px-3 py-1.5 bg-gray-50 border border-gray-300 rounded-xl text-xs font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
+                            className="w-full sm:w-48 text-xs py-1.5"
                           >
                             <option value="">Select Vacant Unit...</option>
                             {vacantUnits.map((u) => (
@@ -241,30 +242,33 @@ export default function Tenants() {
                                 {u.propertyId?.name ? `${u.propertyId.name} - Unit ${u.unitNumber}` : `Unit ${u.unitNumber}`} (₹{u.rentAmount})
                               </option>
                             ))}
-                          </select>
-                          <button
+                          </Select>
+                          <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => handleAssignUnit(t._id)}
                             disabled={!selectedUnits[t._id]}
-                            className="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded-xl transition-all cursor-pointer disabled:opacity-50"
                           >
                             Assign
-                          </button>
+                          </Button>
                         </div>
                       )}
 
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleDeleteTenant(t._id)}
-                        className="px-3.5 py-1.5 text-rose-600 hover:text-rose-800 hover:bg-rose-50 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                        className="text-rose-600 hover:text-rose-800 hover:bg-rose-50"
                       >
                         Delete
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
+        </Card>
       </main>
     </div>
   );

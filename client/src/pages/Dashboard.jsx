@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../hooks/useAuth';
+import { Card, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -67,46 +69,54 @@ export default function Dashboard() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 rounded-2xl bg-gray-200/80 animate-pulse" />
+              <Skeleton key={i} className="h-32 rounded-2xl" />
             ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Properties</span>
-                <span className="p-2 bg-blue-50 text-blue-600 rounded-xl text-lg">🏢</span>
-              </div>
-              <p className="text-3xl font-bold text-gray-900 mt-3">{stats?.totalProperties || 0}</p>
-              <p className="text-xs text-gray-500 mt-1">Managed locations</p>
-            </div>
+            <Card className="hover:shadow-md transition-all">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Properties</span>
+                  <span className="p-2 bg-blue-50 text-blue-600 rounded-xl text-lg">🏢</span>
+                </div>
+                <p className="text-3xl font-bold text-gray-900 mt-3">{stats?.totalProperties || 0}</p>
+                <p className="text-xs text-gray-500 mt-1">Managed locations</p>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Total Units</span>
-                <span className="p-2 bg-indigo-50 text-indigo-600 rounded-xl text-lg">🚪</span>
-              </div>
-              <p className="text-3xl font-bold text-gray-900 mt-3">{stats?.totalUnits || 0}</p>
-              <p className="text-xs text-gray-500 mt-1">Across all properties</p>
-            </div>
+            <Card className="hover:shadow-md transition-all">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Total Units</span>
+                  <span className="p-2 bg-indigo-50 text-indigo-600 rounded-xl text-lg">🚪</span>
+                </div>
+                <p className="text-3xl font-bold text-gray-900 mt-3">{stats?.totalUnits || 0}</p>
+                <p className="text-xs text-gray-500 mt-1">Across all properties</p>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Occupied Units</span>
-                <span className="p-2 bg-emerald-50 text-emerald-600 rounded-xl text-lg">🔑</span>
-              </div>
-              <p className="text-3xl font-bold text-emerald-600 mt-3">{stats?.occupiedUnits || 0}</p>
-              <p className="text-xs text-gray-500 mt-1">Currently rented</p>
-            </div>
+            <Card className="hover:shadow-md transition-all">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Occupied Units</span>
+                  <span className="p-2 bg-emerald-50 text-emerald-600 rounded-xl text-lg">🔑</span>
+                </div>
+                <p className="text-3xl font-bold text-emerald-600 mt-3">{stats?.occupiedUnits || 0}</p>
+                <p className="text-xs text-gray-500 mt-1">Currently rented</p>
+              </CardContent>
+            </Card>
 
-            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Vacant Units</span>
-                <span className="p-2 bg-amber-50 text-amber-600 rounded-xl text-lg">⚠️</span>
-              </div>
-              <p className="text-3xl font-bold text-amber-600 mt-3">{stats?.vacantUnits || 0}</p>
-              <p className="text-xs text-gray-500 mt-1">Ready for tenants</p>
-            </div>
+            <Card className="hover:shadow-md transition-all">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Vacant Units</span>
+                  <span className="p-2 bg-amber-50 text-amber-600 rounded-xl text-lg">⚠️</span>
+                </div>
+                <p className="text-3xl font-bold text-amber-600 mt-3">{stats?.vacantUnits || 0}</p>
+                <p className="text-xs text-gray-500 mt-1">Ready for tenants</p>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -114,48 +124,48 @@ export default function Dashboard() {
         <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Management</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link to="/properties" className="group">
-            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all h-full flex flex-col justify-between">
+            <Card className="p-6 hover:shadow-md transition-all h-full flex flex-col justify-between">
               <div>
                 <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
                   🏢
                 </div>
-                <h3 className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Properties & Units</h3>
-                <p className="text-xs text-gray-500 mt-1">Add new properties, view unit details, and configure monthly rental amounts.</p>
+                <CardTitle className="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors">Properties & Units</CardTitle>
+                <CardDescription className="text-xs text-gray-500 mt-1">Add new properties, view unit details, and configure monthly rental amounts.</CardDescription>
               </div>
               <span className="text-xs font-semibold text-blue-600 mt-6 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                 Manage Properties &rarr;
               </span>
-            </div>
+            </Card>
           </Link>
 
           <Link to="/tenants" className="group">
-            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all h-full flex flex-col justify-between">
+            <Card className="p-6 hover:shadow-md transition-all h-full flex flex-col justify-between">
               <div>
                 <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
                   👥
                 </div>
-                <h3 className="text-base font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">Tenants Directory</h3>
-                <p className="text-xs text-gray-500 mt-1">Register active tenants, assign them to vacant units, and update lease details.</p>
+                <CardTitle className="text-base font-bold text-gray-900 group-hover:text-emerald-600 transition-colors">Tenants Directory</CardTitle>
+                <CardDescription className="text-xs text-gray-500 mt-1">Register active tenants, assign them to vacant units, and update lease details.</CardDescription>
               </div>
               <span className="text-xs font-semibold text-emerald-600 mt-6 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                 View Tenants &rarr;
               </span>
-            </div>
+            </Card>
           </Link>
 
           <Link to="/readings" className="group">
-            <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all h-full flex flex-col justify-between">
+            <Card className="p-6 hover:shadow-md transition-all h-full flex flex-col justify-between">
               <div>
                 <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
                   ⚡
                 </div>
-                <h3 className="text-base font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">Meter Readings</h3>
-                <p className="text-xs text-gray-500 mt-1">Log monthly electric meter readings, calculate consumption, and generate bills.</p>
+                <CardTitle className="text-base font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">Meter Readings</CardTitle>
+                <CardDescription className="text-xs text-gray-500 mt-1">Log monthly electric meter readings, calculate consumption, and generate bills.</CardDescription>
               </div>
               <span className="text-xs font-semibold text-indigo-600 mt-6 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                 Record Readings &rarr;
               </span>
-            </div>
+            </Card>
           </Link>
         </div>
       </main>

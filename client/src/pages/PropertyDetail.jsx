@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Navbar from '../components/Navbar';
 import StatusBadge from '../components/StatusBadge';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function PropertyDetail() {
   const { id } = useParams();
@@ -21,7 +26,7 @@ export default function PropertyDetail() {
     status: 'Vacant'
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [propRes, unitsRes] = await Promise.all([
@@ -35,11 +40,11 @@ export default function PropertyDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     if (id) fetchData();
-  }, [id]);
+  }, [id, fetchData]);
 
   const handleAddUnit = async (e) => {
     e.preventDefault();
@@ -89,14 +94,14 @@ export default function PropertyDetail() {
         </Link>
         
         {property && (
-          <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm mb-8">
+          <Card className="p-6 mb-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-1">
                   <h1 className="text-2xl font-bold text-gray-900">{property.name}</h1>
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200/80">
+                  <Badge variant="default">
                     {property.type}
-                  </span>
+                  </Badge>
                 </div>
                 <p className="text-sm text-gray-500">{property.address}</p>
               </div>
@@ -104,11 +109,11 @@ export default function PropertyDetail() {
                 Total Units: <span className="font-bold text-gray-900">{units.length}</span>
               </div>
             </div>
-          </div>
+          </Card>
         )}
 
         {/* Add Unit Form */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-200/80 shadow-sm mb-8">
+        <Card className="p-6 mb-8">
           <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -116,53 +121,48 @@ export default function PropertyDetail() {
             Add Rental Unit
           </h2>
           <form onSubmit={handleAddUnit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-            <input
+            <Input
               placeholder="Unit Number"
               value={unitForm.unitNumber}
               required
               onChange={(e) => setUnitForm({ ...unitForm, unitNumber: e.target.value })}
-              className="px-3.5 py-2.5 bg-gray-50/50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
-            <select
+            <Select
               value={unitForm.unitType}
               onChange={(e) => setUnitForm({ ...unitForm, unitType: e.target.value })}
-              className="px-3.5 py-2.5 bg-gray-50/50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
             >
               {['House', 'Flat', 'Shop', 'Office', 'Room'].map((t) => (
                 <option key={t} value={t}>{t}</option>
               ))}
-            </select>
-            <input
+            </Select>
+            <Input
               type="number"
               placeholder="Rent Amount"
               value={unitForm.rentAmount}
               required
               onChange={(e) => setUnitForm({ ...unitForm, rentAmount: e.target.value })}
-              className="px-3.5 py-2.5 bg-gray-50/50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
-            <input
+            <Input
               placeholder="Meter Number"
               value={unitForm.meterNumber}
               required
               onChange={(e) => setUnitForm({ ...unitForm, meterNumber: e.target.value })}
-              className="px-3.5 py-2.5 bg-gray-50/50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
-            <select
+            <Select
               value={unitForm.status}
               onChange={(e) => setUnitForm({ ...unitForm, status: e.target.value })}
-              className="px-3.5 py-2.5 bg-gray-50/50 border border-gray-300 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
             >
               <option value="Vacant">Vacant</option>
               <option value="Occupied">Occupied</option>
-            </select>
-            <button type="submit" className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl shadow-sm transition-all cursor-pointer">
+            </Select>
+            <Button type="submit">
               Add Unit
-            </button>
+            </Button>
           </form>
-        </div>
+        </Card>
 
         {/* Units List */}
-        <div className="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+        <Card className="overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <span className="text-sm font-bold text-gray-600">Rental Units ({units.length})</span>
           </div>
@@ -190,24 +190,27 @@ export default function PropertyDetail() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleToggleStatus(unit)}
-                      className="px-3.5 py-1.5 border border-gray-300 text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-xl transition-all cursor-pointer shadow-sm"
                     >
                       Set as {unit.status === 'Occupied' ? 'Vacant' : 'Occupied'}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleDeleteUnit(unit._id)}
-                      className="px-3 py-1.5 text-rose-600 hover:text-rose-800 hover:bg-rose-50 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                      className="text-rose-600 hover:text-rose-800 hover:bg-rose-50"
                     >
                       Delete
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </Card>
       </main>
     </div>
   );
