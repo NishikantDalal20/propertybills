@@ -201,17 +201,35 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
           </div>
 
           {/* Grand Total & Payment Summary Card */}
-          <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md flex justify-between items-center">
-            <div>
-              <span className="text-xs uppercase tracking-wider text-blue-100 font-semibold block">Total Amount Due</span>
-              <span className="text-2xl font-black tracking-tight mt-0.5 block">{formatCurrency(totalAmount)}</span>
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md space-y-3">
+            <div className="flex justify-between items-center">
+              <div>
+                <span className="text-xs uppercase tracking-wider text-blue-100 font-semibold block">Total Amount Due</span>
+                <span className="text-2xl font-black tracking-tight mt-0.5 block">{formatCurrency(totalAmount)}</span>
+              </div>
+              <div className="text-right text-xs text-blue-100">
+                <span>Paid: <strong className="text-emerald-300 font-bold text-sm">{formatCurrency(totalPaidSoFar)}</strong></span>
+                <p className="font-semibold text-white text-xs mt-0.5">
+                  Balance: <span className="font-bold text-amber-200 text-sm">{formatCurrency(remainingBalance)}</span>
+                </p>
+              </div>
             </div>
-            <div className="text-right text-xs text-blue-100">
-              <span>Paid: <strong className="text-emerald-300 font-bold text-sm">{formatCurrency(totalPaidSoFar)}</strong></span>
-              <p className="font-semibold text-white text-xs mt-0.5">
-                Balance: <span className="font-bold text-amber-200 text-sm">{formatCurrency(remainingBalance)}</span>
-              </p>
-            </div>
+
+            {/* Payment Progress Bar */}
+            {totalAmount > 0 && (
+              <div>
+                <div className="flex justify-between text-[10px] text-blue-100 mb-1 font-semibold">
+                  <span>Payment Progress</span>
+                  <span>{Math.min(100, Math.round((totalPaidSoFar / totalAmount) * 100))}% Paid</span>
+                </div>
+                <div className="w-full bg-black/20 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-emerald-400 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.round((totalPaidSoFar / totalAmount) * 100))}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Record Payment Section */}
