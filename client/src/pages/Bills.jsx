@@ -20,6 +20,11 @@ export default function Bills() {
   const fetchBills = async () => {
     try {
       setLoading(true);
+      try {
+        await api.get('/bills/overdue');
+      } catch {
+        // Silently continue if overdue check is unavailable
+      }
       const res = await api.get('/bills');
       setBills(res.data);
     } catch {
