@@ -1,10 +1,39 @@
+import React from 'react';
+import { Badge } from '@/components/ui/badge';
+
 export default function StatusBadge({ status }) {
-  const isOccupied = status === 'Occupied';
+  const currentStatus = status || 'Vacant';
+
+  const statusVariantMap = {
+    Occupied: 'success',
+    Active: 'success',
+    Paid: 'success',
+    Vacant: 'warning',
+    Pending: 'warning',
+    Partial: 'default',
+    Inactive: 'secondary',
+    Overdue: 'destructive',
+  };
+
+  const variant = statusVariantMap[currentStatus] || 'secondary';
+
+  const dotColorMap = {
+    Occupied: 'bg-emerald-500',
+    Active: 'bg-emerald-500',
+    Paid: 'bg-emerald-500',
+    Vacant: 'bg-amber-500',
+    Pending: 'bg-amber-500',
+    Partial: 'bg-blue-500',
+    Inactive: 'bg-gray-400',
+    Overdue: 'bg-rose-500',
+  };
+
+  const dotColor = dotColorMap[currentStatus] || 'bg-gray-400';
+
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isOccupied ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-gray-100 text-gray-700 border border-gray-200'
-      }`}>
-      <span className={`w-1.5 h-1.5 mr-1.5 rounded-full ${isOccupied ? 'bg-green-500' : 'bg-gray-400'}`} />
-      {status || 'Vacant'}
-    </span>
+    <Badge variant={variant}>
+      <span className={`w-1.5 h-1.5 mr-1.5 rounded-full ${dotColor}`} />
+      {currentStatus}
+    </Badge>
   );
 }

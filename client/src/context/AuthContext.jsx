@@ -39,7 +39,7 @@ export function AuthProvider({ children }) {
     const data = await authService.login(credentials);
     
     // Ensure sensitive data is not kept in storage
-    const { password, ...safeUser } = data.user || {};
+    const { password: _password, ...safeUser } = data.user || {};
     const userToSave = Object.keys(safeUser).length > 0 ? safeUser : data.user;
 
     localStorage.setItem('token', data.token);
@@ -52,7 +52,7 @@ export function AuthProvider({ children }) {
   const register = async (userData) => {
     const data = await authService.register(userData);
     
-    const { password, ...safeUser } = data.user || {};
+    const { password: _password, ...safeUser } = data.user || {};
     const userToSave = Object.keys(safeUser).length > 0 ? safeUser : data.user;
 
     localStorage.setItem('token', data.token);

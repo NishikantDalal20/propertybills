@@ -99,6 +99,32 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// Overdue detection: Finds bills where dueDate < now && status !== 'Paid', sets status to 'Overdue'
+router.get('/overdue', auth, async (req, res) => {
+  try {
+    const now = new Date();
+
+    // Set status to 'Overdue' for any unpaid bills past their due date
+    await Bill.updateMany(
+      { dueDate: { $lt: now }, status: { $ne: 'Paid' } },
+      { status: 'Overdue' }
+    );
+
+    const overdueBills = await Bill.find({ status: 'Overdue' })
+      .populate('unitId tenantId')
+      .sort({ dueDate: 1 });
+
+    res.json({
+      message: 'Overdue status check completed',
+      count: overdueBills.length,
+      bills: overdueBills
+    });
+  } catch (err) {
+    console.error('Error updating overdue bills:', err);
+    res.status(500).json({ message: 'Server error while checking overdue bills' });
+  }
+});
+
 router.get('/unit/:unitId', auth, async (req, res) => {
   try {
     const bills = await Bill.find({ unitId: req.params.unitId })

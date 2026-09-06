@@ -4,6 +4,11 @@ import toast from 'react-hot-toast';
 import api from '../lib/api';
 import Navbar from '../components/Navbar';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function Properties() {
   const [properties, setProperties] = useState([]);
@@ -61,7 +66,7 @@ export default function Properties() {
         </div>
 
         {/* Add Property Form */}
-        <div className="bg-white border border-gray-200/60 rounded-2xl p-6 shadow-sm mb-8">
+        <Card className="p-6 mb-8">
           <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -69,40 +74,34 @@ export default function Properties() {
             Add New Property
           </h2>
           <form onSubmit={handleAdd} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <input
+            <Input
               placeholder="Property Name"
               value={form.name}
               required
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm shadow-sm transition-all"
             />
-            <input
+            <Input
               placeholder="Address"
               value={form.address}
               required
               onChange={(e) => setForm({ ...form, address: e.target.value })}
-              className="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm shadow-sm transition-all"
             />
-            <select
+            <Select
               value={form.type}
               onChange={(e) => setForm({ ...form, type: e.target.value })}
-              className="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm shadow-sm bg-white font-medium text-gray-700 transition-all cursor-pointer"
             >
               {['House', 'Flat', 'Shop', 'Office', 'Room'].map(t => (
                 <option key={t} value={t}>{t}</option>
               ))}
-            </select>
-            <button
-              type="submit"
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer text-sm"
-            >
+            </Select>
+            <Button type="submit">
               Create Property
-            </button>
+            </Button>
           </form>
-        </div>
+        </Card>
 
         {/* Properties List */}
-        <div className="bg-white border border-gray-200/60 rounded-2xl shadow-sm overflow-hidden">
+        <Card className="overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
             <span className="text-sm font-bold text-gray-600">Total Registered Properties: {properties.length}</span>
           </div>
@@ -123,9 +122,9 @@ export default function Properties() {
                       <Link to={`/properties/${p._id}`} className="font-bold text-gray-900 text-lg hover:text-blue-600 transition-colors truncate">
                         {p.name}
                       </Link>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                      <Badge variant="default">
                         {p.type}
-                      </span>
+                      </Badge>
                     </div>
                     <p className="text-sm text-gray-500 flex items-center gap-1.5">
                       <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,24 +135,20 @@ export default function Properties() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3 w-full md:w-auto">
-                    <Link
-                      to={`/properties/${p._id}`}
-                      className="bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold py-1.5 px-4 rounded-xl transition-all text-sm whitespace-nowrap"
-                    >
-                      View Units &rarr;
+                    <Link to={`/properties/${p._id}`}>
+                      <Button variant="secondary" size="sm">
+                        View Units &rarr;
+                      </Button>
                     </Link>
-                    <button
-                      onClick={() => handleDelete(p._id)}
-                      className="text-sm font-semibold text-rose-600 hover:text-rose-800 hover:bg-rose-50 px-3 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap"
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(p._id)} className="text-rose-600 hover:text-rose-800 hover:bg-rose-50">
                       Delete
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </div>
+        </Card>
       </main>
     </div>
   );
