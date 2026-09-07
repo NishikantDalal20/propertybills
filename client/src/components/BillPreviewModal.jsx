@@ -36,10 +36,18 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
     setShowPaymentForm(false);
   }, [initialBill]);
 
+  const isRealObjectId = (id) => typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id);
+
   useEffect(() => {
     if (!bill?._id || !isOpen) return;
 
     const fetchPayments = async () => {
+      if (!isRealObjectId(bill._id)) {
+        setPayments([]);
+        setTotalPaidSoFar(bill.status === 'Paid' ? (bill.totalAmount || 0) : 0);
+        return;
+      }
+
       try {
         const res = await api.get(`/payments/bill/${bill._id}`);
         const paymentList = Array.isArray(res.data)
@@ -102,6 +110,35 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
 
     if (amount > remainingBalance) {
       toast.error(`Payment cannot exceed the remaining balance of ${formatCurrency(remainingBalance)}`);
+      return;
+    }
+
+    if (!isRealObjectId(bill._id)) {
+      const newPayment = {
+        _id: `pay-temp-${Date.now()}`,
+        billId: bill._id,
+        amountPaid: amount,
+        method: paymentForm.method,
+        transactionRef: paymentForm.transactionRef,
+        paymentDate: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+
+      const newTotalPaid = totalPaidSoFar + amount;
+      const newStatus = newTotalPaid >= totalAmount ? 'Paid' : 'Partial';
+      const updatedBill = { ...bill, status: newStatus };
+
+      setPayments((prev) => [newPayment, ...prev]);
+      setTotalPaidSoFar(newTotalPaid);
+      setBill(updatedBill);
+      setShowPaymentForm(false);
+      setPaymentForm({ amountPaid: '', method: 'UPI', transactionRef: '' });
+
+      if (onUpdate) {
+        onUpdate(updatedBill);
+      }
+
+      toast.success('Payment recorded successfully!');
       return;
     }
 

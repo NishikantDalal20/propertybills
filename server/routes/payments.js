@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Payment from '../models/Payment.js';
 import Bill from '../models/Bill.js';
 import auth from '../middleware/auth.js';
@@ -12,6 +13,10 @@ router.post('/', auth, async (req, res) => {
 
     if (!billId || amountPaid === undefined || amountPaid === null) {
       return res.status(400).json({ message: 'Bill ID and Amount Paid are required' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(billId)) {
+      return res.status(400).json({ message: 'Invalid Bill ID. Temporary preview bills cannot record persistent backend payments.' });
     }
 
     const numAmount = Number(amountPaid);
@@ -67,6 +72,13 @@ router.post('/', auth, async (req, res) => {
 // Fetch payment history for a bill
 router.get('/bill/:billId', auth, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.billId)) {
+      return res.json({
+        payments: [],
+        totalPaidSoFar: 0
+      });
+    }
+
     const payments = await Payment.find({ billId: req.params.billId }).sort({ createdAt: -1 });
     const totalPaidSoFar = payments.reduce((sum, p) => sum + (p.amountPaid || 0), 0);
     
