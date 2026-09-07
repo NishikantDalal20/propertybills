@@ -30,6 +30,7 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
     transactionRef: ''
   });
   const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     setBill(initialBill);
@@ -88,6 +89,69 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!bill?._id) return;
+
+    try {
+      setDownloading(true);
+      let blob;
+
+      if (isRealObjectId(bill._id)) {
+        const res = await api.get(`/bills/${bill._id}/download`, { responseType: 'blob' });
+        blob = new Blob([res.data], { type: res.headers['content-type'] || 'text/html' });
+      } else {
+        const mockHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice - ${bill.invoiceNumber || 'INV-PREVIEW'}</title>
+  <style>
+    body { font-family: sans-serif; padding: 40px; color: #111827; }
+    .card { max-width: 600px; margin: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; }
+    h1 { margin: 0 0 8px 0; font-size: 20px; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    td, th { padding: 8px; border-bottom: 1px solid #eee; }
+    .right { text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>PROPERTYBILLS INVOICE</h1>
+    <p><strong>Invoice Number:</strong> ${bill.invoiceNumber || 'INV-PREVIEW'}</p>
+    <p><strong>Month:</strong> ${bill.month}</p>
+    <p><strong>Status:</strong> ${bill.status || 'Pending'}</p>
+    <table>
+      <tr><td>Base Rent</td><td class="right">₹${rent.toLocaleString('en-IN')}</td></tr>
+      <tr><td>Electricity Charges</td><td class="right">₹${electricity.toLocaleString('en-IN')}</td></tr>
+      <tr><td>Water Utility</td><td class="right">₹${water.toLocaleString('en-IN')}</td></tr>
+      <tr><td>Maintenance Fee</td><td class="right">₹${maintenance.toLocaleString('en-IN')}</td></tr>
+      ${otherCharges > 0 ? `<tr><td>Other Charges</td><td class="right">₹${otherCharges.toLocaleString('en-IN')}</td></tr>` : ''}
+      ${discount > 0 ? `<tr><td>Discount</td><td class="right">-₹${discount.toLocaleString('en-IN')}</td></tr>` : ''}
+      <tr><th>Total Amount</th><th class="right">₹${totalAmount.toLocaleString('en-IN')}</th></tr>
+    </table>
+  </div>
+</body>
+</html>`;
+        blob = new Blob([mockHtml], { type: 'text/html' });
+      }
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Invoice-${bill.invoiceNumber || 'INV'}.html`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Invoice downloaded successfully!');
+    } catch (err) {
+      console.error('Failed to download invoice:', err);
+      toast.error('Failed to download invoice');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleOpenPaymentForm = () => {
@@ -481,12 +545,31 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
 
         {/* Footer Actions */}
         <DialogFooter className="p-4 border-t border-gray-100 bg-gray-50/50 flex flex-row items-center justify-between gap-3 print:hidden">
-          <Button variant="outline" onClick={handlePrint} size="sm" className="gap-1.5 text-xs">
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Print / Save
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleDownloadInvoice}
+              disabled={downloading}
+              size="sm"
+              className="gap-1.5 text-xs border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-100/70"
+            >
+              {downloading ? (
+                <Spinner size="sm" />
+              ) : (
+                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              )}
+              {downloading ? 'Downloading...' : 'Download Invoice'}
+            </Button>
+
+            <Button variant="outline" onClick={handlePrint} size="sm" className="gap-1.5 text-xs">
+              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              Print / Save
+            </Button>
+          </div>
 
           <Button onClick={onClose} size="sm" className="text-xs">
             Close Preview
