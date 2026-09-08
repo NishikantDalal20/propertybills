@@ -30,6 +30,7 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
     transactionRef: ''
   });
   const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
     setBill(initialBill);
@@ -88,6 +89,33 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!bill?._id) return;
+    try {
+      setDownloadingPdf(true);
+      if (isRealObjectId(bill._id)) {
+        const res = await api.get(`/invoices/${bill._id}`, { responseType: 'blob' });
+        const blob = new Blob([res.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice-${bill.invoiceNumber || bill._id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        toast.success('PDF Invoice downloaded!');
+      } else {
+        toast.error('Save bill first to download PDF invoice');
+      }
+    } catch (err) {
+      console.error('Failed to download PDF invoice:', err);
+      toast.error('Failed to download PDF invoice');
+    } finally {
+      setDownloadingPdf(false);
+    }
   };
 
   const handleOpenPaymentForm = () => {
@@ -481,12 +509,31 @@ export default function BillPreviewModal({ bill: initialBill, isOpen, onClose, o
 
         {/* Footer Actions */}
         <DialogFooter className="p-4 border-t border-gray-100 bg-gray-50/50 flex flex-row items-center justify-between gap-3 print:hidden">
-          <Button variant="outline" onClick={handlePrint} size="sm" className="gap-1.5 text-xs">
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Print / Save
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleDownloadPdf}
+              disabled={downloadingPdf}
+              size="sm"
+              className="gap-1.5 text-xs border-blue-200 text-blue-700 bg-blue-50/50 hover:bg-blue-100/70"
+            >
+              {downloadingPdf ? (
+                <Spinner size="sm" />
+              ) : (
+                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              )}
+              {downloadingPdf ? 'Downloading PDF...' : 'Download PDF Invoice'}
+            </Button>
+
+            <Button variant="outline" onClick={handlePrint} size="sm" className="gap-1.5 text-xs">
+              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              Print / Save
+            </Button>
+          </div>
 
           <Button onClick={onClose} size="sm" className="text-xs">
             Close Preview
