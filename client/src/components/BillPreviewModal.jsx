@@ -38,6 +38,7 @@ export default function BillPreviewModal({
 
   // PDF Download State
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [downloadingReceiptId, setDownloadingReceiptId] = useState(null);
 
   useEffect(() => {
     setBill(initialBill);
@@ -162,6 +163,46 @@ export default function BillPreviewModal({
       toast.error('Failed to download PDF invoice');
     } finally {
       setDownloadingPdf(false);
+    }
+  };
+
+  // Download PDF Payment Receipt
+  const handleDownloadReceiptPdf = async (paymentId) => {
+    if (!paymentId) return;
+
+    try {
+      setDownloadingReceiptId(paymentId);
+
+      if (isRealObjectId(paymentId)) {
+        const res = await api.get(`/invoices/receipt/${paymentId}`, {
+          responseType: 'blob'
+        });
+
+        const blob = new Blob([res.data], {
+          type: 'application/pdf'
+        });
+
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `receipt-${paymentId}.pdf`;
+
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        window.URL.revokeObjectURL(url);
+
+        toast.success('Payment Receipt PDF downloaded!');
+      } else {
+        toast.error('Temporary payment receipt cannot be downloaded');
+      }
+    } catch (err) {
+      console.error('Failed to download receipt PDF:', err);
+      toast.error('Failed to download receipt PDF');
+    } finally {
+      setDownloadingReceiptId(null);
     }
   };
 
@@ -833,10 +874,40 @@ export default function BillPreviewModal({
                             {p.transactionRef || '—'}
                           </td>
 
-                          <td className="py-2.5 px-3 text-right font-bold text-emerald-700">
-                            {formatCurrency(
-                              p.amountPaid
-                            )}
+                          <td className="py-2.5 px-3 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <span className="font-bold text-emerald-700">
+                                {formatCurrency(p.amountPaid)}
+                              </span>
+                              {isRealObjectId(p._id) && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDownloadReceiptPdf(p._id)}
+                                  disabled={downloadingReceiptId === p._id}
+                                  title="Download Receipt PDF"
+                                  className="h-6 w-6 p-0 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100/60 print:hidden"
+                                >
+                                  {downloadingReceiptId === p._id ? (
+                                    <Spinner size="sm" />
+                                  ) : (
+                                    <svg
+                                      className="w-3.5 h-3.5"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                      />
+                                    </svg>
+                                  )}
+                                </Button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
