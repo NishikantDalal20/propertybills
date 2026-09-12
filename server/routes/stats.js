@@ -16,7 +16,6 @@ router.get('/summary', auth, async (req, res) => {
       { $match: { status: 'Paid' } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
     ]);
-
     res.json({
       totalBills,
       paidBills,
@@ -48,7 +47,8 @@ router.get('/revenue-by-month', auth, async (req, res) => {
 router.get('/payment-status', auth, async (req, res) => {
   try {
     const data = await Bill.aggregate([
-      { $group: { _id: '$status', count: { $sum: 1 } } }
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
     ]);
     res.json(data);
   } catch (err) {
@@ -56,5 +56,4 @@ router.get('/payment-status', auth, async (req, res) => {
     res.status(500).json({ message: 'Server error while fetching payment status stats' });
   }
 });
-
 export default router;
