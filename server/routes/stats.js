@@ -45,4 +45,17 @@ router.get('/revenue-by-month', auth, async (req, res) => {
   }
 });
 
+router.get('/payment-status', auth, async (req, res) => {
+  try {
+    const data = await Bill.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+    res.json(data);
+  } catch (err) {
+    console.error('Error fetching payment status stats:', err);
+    res.status(500).json({ message: 'Server error while fetching payment status stats' });
+  }
+});
+
 export default router;
