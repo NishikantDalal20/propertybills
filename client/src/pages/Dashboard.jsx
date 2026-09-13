@@ -13,6 +13,7 @@ import {
   Cell,
   Legend,
 } from 'recharts';
+import toast from 'react-hot-toast';
 import api from '../lib/api';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../hooks/useAuth';
@@ -41,9 +42,39 @@ export default function Dashboard() {
   const [revenueError, setRevenueError] = useState('');
   const [paymentStatusError, setPaymentStatusError] = useState('');
 
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [downloadingCsv, setDownloadingCsv] = useState(false);
+
   const { user } = useAuth();
   const currentUser = user?.user || user || {};
   const displayName = currentUser?.name || 'Landlord';
+
+  const handleDownloadReport = async (type) => {
+    try {
+      if (type === 'pdf') setDownloadingPdf(true);
+      if (type === 'csv') setDownloadingCsv(true);
+
+      const endpoint = type === 'pdf' ? '/reports/revenue-pdf' : '/reports/revenue-csv';
+      const defaultFilename = type === 'pdf' ? 'monthly-revenue-report.pdf' : 'monthly-revenue-report.csv';
+
+      const response = await api.get(endpoint, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', defaultFilename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(`${type.toUpperCase()} report downloaded successfully`);
+    } catch (err) {
+      console.error(`Failed to export ${type} report:`, err);
+      toast.error(`Failed to download ${type.toUpperCase()} report`);
+    } finally {
+      if (type === 'pdf') setDownloadingPdf(false);
+      if (type === 'csv') setDownloadingCsv(false);
+    }
+  };
 
   useEffect(() => {
     // 1. Fetch Property Summary Stats
@@ -202,11 +233,31 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Revenue Over Time Line Chart */}
           <Card className="hover:shadow-md transition-all flex flex-col justify-between">
-            <CardHeader className="p-6 pb-2">
-              <CardTitle className="text-base font-bold text-gray-900">Revenue Over Time</CardTitle>
-              <CardDescription className="text-xs text-gray-500">
-                Monthly revenue generated from paid tenant bills
-              </CardDescription>
+            <CardHeader className="p-6 pb-2 flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle className="text-base font-bold text-gray-900">Revenue Over Time</CardTitle>
+                <CardDescription className="text-xs text-gray-500">
+                  Monthly revenue generated from paid tenant bills
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleDownloadReport('pdf')}
+                  disabled={downloadingPdf}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 disabled:opacity-50 transition-colors flex items-center gap-1 border border-blue-200/60 cursor-pointer"
+                  title="Export PDF Report"
+                >
+                  📄 {downloadingPdf ? 'Downloading...' : 'PDF Report'}
+                </button>
+                <button
+                  onClick={() => handleDownloadReport('csv')}
+                  disabled={downloadingCsv}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 disabled:opacity-50 transition-colors flex items-center gap-1 border border-emerald-200/60 cursor-pointer"
+                  title="Export CSV Report"
+                >
+                  📊 {downloadingCsv ? 'Downloading...' : 'CSV'}
+                </button>
+              </div>
             </CardHeader>
             <CardContent className="p-6">
               {revenueLoading ? (

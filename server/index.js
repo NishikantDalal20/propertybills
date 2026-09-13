@@ -11,6 +11,7 @@ import billRoutes from './routes/bills.js';
 import paymentRoutes from './routes/payments.js';
 import invoiceRoutes from './routes/invoices.js';
 import statsRoutes from './routes/stats.js';
+import reportRoutes from './routes/reports.js';
 
 const app = express();
 app.use(cors());
@@ -27,6 +28,7 @@ app.use('/api/bills', billRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/reports', reportRoutes);
 
 
 mongoose.connect(process.env.MONGO_URI)
