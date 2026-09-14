@@ -1,6 +1,7 @@
 import express from 'express';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import Bill from '../models/Bill.js';
+import RentalUnit from '../models/RentalUnit.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
@@ -29,20 +30,112 @@ const formatDate = (dateInput) => {
   }
 };
 
+// Dynamic Mongoose Query Builder based on Request Filters
+const buildQuery = async (queryParams) => {
+  const { propertyId, month, status, startDate, endDate } = queryParams;
+  const query = {};
+
+  if (status && status !== 'all') {
+    query.status = status;
+  }
+
+  if (month) {
+    query.month = month;
+  }
+
+  if (startDate || endDate) {
+    query.createdAt = {};
+    if (startDate) query.createdAt.$gte = new Date(startDate);
+    if (endDate) query.createdAt.$lte = new Date(new Date(endDate).setHours(23, 59, 59, 999));
+  }
+
+  if (propertyId && propertyId !== 'all') {
+    const units = await RentalUnit.find({ propertyId }).select('_id');
+    const unitIds = units.map(u => u._id);
+    query.unitId = { $in: unitIds };
+  }
+
+  return query;
+};
+
+/**
+ * GET /api/reports/preview
+ * Fetches filtered bill summary metrics and list for frontend live report table preview
+ */
+router.get('/preview', auth, async (req, res) => {
+  try {
+    const query = await buildQuery(req.query);
+
+    const bills = await Bill.find(query)
+      .populate({
+        path: 'unitId',
+        populate: { path: 'propertyId', select: 'name address' }
+      })
+      .populate('tenantId')
+      .sort({ month: -1, createdAt: -1 });
+
+    let totalBilled = 0;
+    let totalPaid = 0;
+    let totalPending = 0;
+    let paidCount = 0;
+    let pendingCount = 0;
+    let overdueCount = 0;
+
+    bills.forEach((bill) => {
+      const amt = Number(bill.totalAmount || 0);
+      totalBilled += amt;
+
+      if (bill.status === 'Paid') {
+        totalPaid += amt;
+        paidCount += 1;
+      } else {
+        totalPending += amt;
+        if (bill.status === 'Overdue') {
+          overdueCount += 1;
+        } else {
+          pendingCount += 1;
+        }
+      }
+    });
+
+    res.json({
+      summary: {
+        totalBills: bills.length,
+        totalBilled,
+        totalPaid,
+        totalPending,
+        paidCount,
+        pendingCount,
+        overdueCount
+      },
+      bills
+    });
+  } catch (err) {
+    console.error('Error fetching report preview:', err);
+    res.status(500).json({ message: 'Server error while fetching report preview' });
+  }
+});
+
 /**
  * GET /api/reports/revenue-pdf
- * Generates a styled Monthly Revenue Report PDF using pdf-lib
+ * Generates a styled Monthly Revenue Report PDF using pdf-lib with filter support
  */
 router.get('/revenue-pdf', auth, async (req, res) => {
   try {
-    const { month } = req.query;
+    const baseQuery = await buildQuery(req.query);
 
-    const query = { status: 'Paid' };
-    if (month) {
-      query.month = month;
+    // If status filter not explicitly set, default to Paid for revenue reports
+    if (!req.query.status || req.query.status === 'all') {
+      baseQuery.status = 'Paid';
     }
 
-    const paidBills = await Bill.find(query).populate('unitId tenantId').sort({ month: -1, createdAt: -1 });
+    const paidBills = await Bill.find(baseQuery)
+      .populate({
+        path: 'unitId',
+        populate: { path: 'propertyId', select: 'name' }
+      })
+      .populate('tenantId')
+      .sort({ month: -1, createdAt: -1 });
 
     // Grouping by month
     const monthlySummaryMap = {};
@@ -192,7 +285,7 @@ router.get('/revenue-pdf', auth, async (req, res) => {
     let currentY = 570;
 
     if (monthlySummaries.length === 0) {
-      page.drawText('No paid revenue data available.', { x: 65, y: currentY, size: 10, font: fontRegular, color: grayText });
+      page.drawText('No paid revenue data available for selected filter.', { x: 65, y: currentY, size: 10, font: fontRegular, color: grayText });
     } else {
       monthlySummaries.forEach((sum) => {
         page.drawLine({
@@ -216,7 +309,7 @@ router.get('/revenue-pdf', auth, async (req, res) => {
 
     // Recent Transactions Section
     currentY -= 20;
-    page.drawText('Recent Paid Invoices', { x: 50, y: currentY, size: 12, font: fontBold, color: darkText });
+    page.drawText('Paid Invoices', { x: 50, y: currentY, size: 12, font: fontBold, color: darkText });
 
     currentY -= 30;
     page.drawRectangle({
@@ -233,7 +326,7 @@ router.get('/revenue-pdf', auth, async (req, res) => {
     page.drawText('AMOUNT', { x: 440, y: currentY + 8, size: 9, font: fontBold, color: rgb(1, 1, 1) });
 
     currentY -= 25;
-    const recentBills = paidBills.slice(0, 10); // Display top 10
+    const recentBills = paidBills.slice(0, 15); // Display top 15
 
     if (recentBills.length === 0) {
       page.drawText('No paid invoice records.', { x: 65, y: currentY, size: 10, font: fontRegular, color: grayText });
@@ -277,7 +370,7 @@ router.get('/revenue-pdf', auth, async (req, res) => {
 
     const pdfBytes = await pdfDoc.save();
 
-    const filename = month ? `monthly-revenue-report-${month}.pdf` : 'monthly-revenue-report.pdf';
+    const filename = req.query.month ? `monthly-revenue-report-${req.query.month}.pdf` : 'monthly-revenue-report.pdf';
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
     res.send(Buffer.from(pdfBytes));
@@ -289,11 +382,16 @@ router.get('/revenue-pdf', auth, async (req, res) => {
 
 /**
  * GET /api/reports/revenue-csv
- * Generates an Excel-compatible CSV for monthly revenue breakdown
+ * Generates an Excel-compatible CSV for monthly revenue breakdown with filter support
  */
 router.get('/revenue-csv', auth, async (req, res) => {
   try {
-    const paidBills = await Bill.find({ status: 'Paid' }).sort({ month: -1 });
+    const query = await buildQuery(req.query);
+    if (!req.query.status || req.query.status === 'all') {
+      query.status = 'Paid';
+    }
+
+    const paidBills = await Bill.find(query).sort({ month: -1 });
 
     const summaryMap = {};
     paidBills.forEach((bill) => {
@@ -360,21 +458,30 @@ router.get('/revenue-csv', auth, async (req, res) => {
 
 /**
  * GET /api/reports/bills-csv
- * Generates an Excel-compatible CSV report of all bills
+ * Generates an Excel-compatible CSV report of filtered bills
  */
 router.get('/bills-csv', auth, async (req, res) => {
   try {
-    const bills = await Bill.find().populate('unitId tenantId').sort({ createdAt: -1 });
+    const query = await buildQuery(req.query);
+
+    const bills = await Bill.find(query)
+      .populate({
+        path: 'unitId',
+        populate: { path: 'propertyId', select: 'name' }
+      })
+      .populate('tenantId')
+      .sort({ createdAt: -1 });
 
     const rows = [
-      ['Invoice Number', 'Billing Month', 'Tenant Name', 'Unit Number', 'Status', 'Rent', 'Electricity', 'Water', 'Maintenance', 'Other Charges', 'Discount', 'Late Fee', 'Total Amount', 'Due Date', 'Issue Date']
+      ['Invoice Number', 'Billing Month', 'Property Name', 'Unit Number', 'Tenant Name', 'Status', 'Rent', 'Electricity', 'Water', 'Maintenance', 'Other Charges', 'Discount', 'Late Fee', 'Total Amount', 'Due Date', 'Issue Date']
     ];
 
     bills.forEach((bill) => {
       const invNum = bill.invoiceNumber || bill._id.toString();
       const month = bill.month || '';
-      const tenantName = bill.tenantId?.name || 'N/A';
+      const propName = bill.unitId?.propertyId?.name || 'N/A';
       const unitNum = bill.unitId?.unitNumber || 'N/A';
+      const tenantName = bill.tenantId?.name || 'N/A';
       const status = bill.status || 'Pending';
       const rent = Number(bill.rent || 0).toFixed(2);
       const electricity = Number(bill.electricity || 0).toFixed(2);
@@ -388,7 +495,7 @@ router.get('/bills-csv', auth, async (req, res) => {
       const issueDate = formatDate(bill.createdAt);
 
       rows.push([
-        invNum, month, tenantName, unitNum, status, rent, electricity, water, maintenance, other, discount, lateFee, total, dueDate, issueDate
+        invNum, month, propName, unitNum, tenantName, status, rent, electricity, water, maintenance, other, discount, lateFee, total, dueDate, issueDate
       ]);
     });
 

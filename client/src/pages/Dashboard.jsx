@@ -377,7 +377,7 @@ export default function Dashboard() {
 
         {/* Quick Action Navigation Grid */}
         <h2 className="text-lg font-bold text-gray-900 mb-4">Quick Management</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Link to="/properties" className="group">
             <Card className="p-6 hover:shadow-md transition-all h-full flex flex-col justify-between">
               <div>
@@ -419,6 +419,21 @@ export default function Dashboard() {
               </div>
               <span className="text-xs font-semibold text-indigo-600 mt-6 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                 Record Readings &rarr;
+              </span>
+            </Card>
+          </Link>
+
+          <Link to="/reports" className="group">
+            <Card className="p-6 hover:shadow-md transition-all h-full flex flex-col justify-between">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                  📈
+                </div>
+                <CardTitle className="text-base font-bold text-gray-900 group-hover:text-purple-600 transition-colors">Financial Reports</CardTitle>
+                <CardDescription className="text-xs text-gray-500 mt-1">Filter revenue analytics, preview billing data, and export custom PDF & CSV files.</CardDescription>
+              </div>
+              <span className="text-xs font-semibold text-purple-600 mt-6 inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                Generate Reports &rarr;
               </span>
             </Card>
           </Link>
