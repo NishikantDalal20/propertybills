@@ -22,6 +22,7 @@ export default function Navbar() {
     { name: 'Tenants', path: '/tenants' },
     { name: 'Meter Readings', path: '/readings' },
     { name: 'Bills', path: '/bills' },
+    { name: 'Reports', path: '/reports' },
   ];
 
   const isLinkActive = (path) => {
