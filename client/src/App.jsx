@@ -9,6 +9,7 @@ import PropertyDetail from './pages/PropertyDetail';
 import Tenants from './pages/Tenants';
 import MeterReadings from './pages/MeterReadings';
 import Bills from './pages/Bills';
+import Reports from './pages/Reports';
 
 function App() {
   return (
@@ -89,6 +90,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Bills />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <Reports />
             </ProtectedRoute>
           }
         />
