@@ -48,6 +48,11 @@ router.post('/generate', auth, async (req, res) => {
       finalTenantId = activeTenant ? activeTenant._id : null;
     }
 
+    // Late fee calculation: check for existing overdue bill on this unit
+    const previousOverdue = await Bill.findOne({ unitId, status: 'Overdue' });
+    const computedLateFee = previousOverdue ? previousOverdue.totalAmount * 0.02 : 0;
+    const lateFee = req.body.lateFee !== undefined ? Number(req.body.lateFee) || 0 : computedLateFee;
+
     const rentAmount = Number(unit.rentAmount) || 0;
     const consumed = Number(unitsConsumed) || 0;
     const rate = Number(electricityRate) || 0;
@@ -63,7 +68,8 @@ router.post('/generate', auth, async (req, res) => {
       water: waterFee,
       maintenance: maintFee,
       otherCharges: extraFee,
-      discount: disc
+      discount: disc,
+      lateFee
     });
 
     const invoiceNumber = `INV-${Date.now()}`;
@@ -78,6 +84,7 @@ router.post('/generate', auth, async (req, res) => {
       maintenance: maintFee,
       otherCharges: extraFee,
       discount: disc,
+      lateFee,
       totalAmount,
       dueDate: dueDate || new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
       status: 'Pending'
