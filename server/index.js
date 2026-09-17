@@ -12,6 +12,7 @@ import paymentRoutes from './routes/payments.js';
 import invoiceRoutes from './routes/invoices.js';
 import statsRoutes from './routes/stats.js';
 import reportRoutes from './routes/reports.js';
+import notificationRoutes from './routes/notifications.js';
 
 const app = express();
 app.use(cors());
@@ -29,6 +30,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 
 mongoose.connect(process.env.MONGO_URI)
