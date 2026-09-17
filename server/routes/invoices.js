@@ -3,7 +3,9 @@ import mongoose from 'mongoose';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import Bill from '../models/Bill.js';
 import Payment from '../models/Payment.js';
+import Notification from '../models/Notification.js';
 import auth from '../middleware/auth.js';
+import { sendInvoiceEmail } from '../utils/mailer.js';
 
 const router = express.Router();
 
@@ -402,6 +404,111 @@ router.get('/receipt/:paymentId', auth, async (req, res) => {
   } catch (err) {
     console.error('Error generating payment receipt PDF:', err);
     res.status(500).json({ message: 'Server error while generating payment receipt PDF' });
+  }
+});
+
+// POST /api/invoices/:billId/email - Email Invoice PDF & Create Notification
+router.post('/:billId/email', auth, async (req, res) => {
+  try {
+    const bill = await Bill.findById(req.params.billId)
+      .populate('unitId')
+      .populate('tenantId');
+
+    if (!bill) {
+      return res.status(404).json({
+        message: 'Bill not found'
+      });
+    }
+
+    const tenant = bill.tenantId;
+
+    if (!tenant?.email) {
+      return res.status(400).json({
+        message: 'Tenant email address not available'
+      });
+    }
+
+    // Generate PDF
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([400, 600]);
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    page.drawText(`Invoice #${bill.invoiceNumber}`, {
+      x: 50,
+      y: 550,
+      size: 18,
+      font
+    });
+
+    page.drawText(`Month: ${bill.month}`, {
+      x: 50,
+      y: 520,
+      size: 12,
+      font
+    });
+
+    page.drawText(`Tenant: ${tenant.name}`, {
+      x: 50,
+      y: 500,
+      size: 12,
+      font
+    });
+
+    page.drawText(`Rent: Rs. ${bill.rent}`, {
+      x: 50,
+      y: 470,
+      size: 12,
+      font
+    });
+
+    page.drawText(`Electricity: Rs. ${bill.electricity}`, {
+      x: 50,
+      y: 450,
+      size: 12,
+      font
+    });
+
+    page.drawText(`Water: Rs. ${bill.water}`, {
+      x: 50,
+      y: 430,
+      size: 12,
+      font
+    });
+
+    page.drawText(`Total: Rs. ${bill.totalAmount}`, {
+      x: 50,
+      y: 400,
+      size: 16,
+      font
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    const pdfBuffer = Buffer.from(pdfBytes);
+
+    // Send email
+    await sendInvoiceEmail(
+      tenant.email,
+      pdfBuffer,
+      bill.invoiceNumber
+    );
+
+    // Create notification
+    await Notification.create({
+      userId: req.user.id,
+      message: `Invoice ${bill.invoiceNumber} emailed to ${tenant.email}`,
+      type: 'bill_generated'
+    });
+
+    res.json({
+      message: 'Invoice emailed successfully'
+    });
+
+  } catch (err) {
+    console.error('Email invoice error:', err);
+
+    res.status(500).json({
+      message: 'Failed to email invoice'
+    });
   }
 });
 
