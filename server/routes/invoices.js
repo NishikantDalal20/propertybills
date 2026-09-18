@@ -428,68 +428,227 @@ router.post('/:billId/email', auth, async (req, res) => {
       });
     }
 
-    // Generate PDF
+    // Query Payment history for this bill to compute paid amount & remaining balance
+    const payments = await Payment.find({ billId: bill._id });
+    const totalPaidSoFar = payments.reduce((sum, p) => sum + Number(p.amountPaid || 0), 0);
+
+    const rent = Number(bill.rent || 0);
+    const electricity = Number(bill.electricity || 0);
+    const water = Number(bill.water || 0);
+    const maintenance = Number(bill.maintenance || 0);
+    const otherCharges = Number(bill.otherCharges || 0);
+    const discount = Number(bill.discount || 0);
+    const lateFee = Number(bill.lateFee || 0);
+    const totalAmount = bill.totalAmount !== undefined 
+      ? Number(bill.totalAmount) 
+      : (rent + electricity + water + maintenance + otherCharges - discount + lateFee);
+    const remainingBalance = Math.max(0, totalAmount - totalPaidSoFar);
+
+    // Generate Beautiful SaaS Styled PDF
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([400, 600]);
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const page = pdfDoc.addPage([550, 750]);
+    const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    page.drawText(`Invoice #${bill.invoiceNumber}`, {
+    // Colors matching dashboard theme
+    const primaryColor = rgb(0.12, 0.16, 0.24); // Dark Navy
+    const accentBlue = rgb(0.15, 0.38, 0.92);   // SaaS Blue
+    const grayText = rgb(0.4, 0.45, 0.52);
+    const darkText = rgb(0.1, 0.12, 0.15);
+    const lightBg = rgb(0.96, 0.97, 0.98);
+    const borderColor = rgb(0.88, 0.9, 0.93);
+    const emeraldColor = rgb(0.02, 0.6, 0.42);
+    const amberColor = rgb(0.92, 0.55, 0.05);
+
+    const invNum = bill.invoiceNumber || bill._id;
+    const tenantName = tenant.name || 'Valued Tenant';
+    const unitLabel = bill.unitId?.unitNumber ? `Unit ${bill.unitId.unitNumber}` : 'Rental Unit';
+
+    // Outer Container Border
+    page.drawRectangle({
+      x: 30,
+      y: 30,
+      width: 490,
+      height: 690,
+      borderColor,
+      borderWidth: 1,
+      color: rgb(1, 1, 1)
+    });
+
+    // Brand Header Box
+    page.drawRectangle({
+      x: 30,
+      y: 650,
+      width: 490,
+      height: 70,
+      color: lightBg
+    });
+
+    page.drawText('PROPERTYBILLS', {
       x: 50,
-      y: 550,
+      y: 692,
       size: 18,
-      font
+      font: fontBold,
+      color: primaryColor
     });
 
-    page.drawText(`Month: ${bill.month}`, {
+    page.drawText('Property Management Invoice', {
       x: 50,
-      y: 520,
+      y: 672,
+      size: 10,
+      font: fontRegular,
+      color: grayText
+    });
+
+    page.drawText('RENTAL INVOICE', {
+      x: 370,
+      y: 692,
       size: 12,
-      font
+      font: fontBold,
+      color: accentBlue
     });
 
-    page.drawText(`Tenant: ${tenant.name}`, {
-      x: 50,
-      y: 500,
-      size: 12,
-      font
+    page.drawText(`#${invNum}`, {
+      x: 370,
+      y: 672,
+      size: 11,
+      font: fontRegular,
+      color: darkText
     });
 
-    page.drawText(`Rent: Rs. ${bill.rent}`, {
-      x: 50,
-      y: 470,
-      size: 12,
-      font
+    // Divider
+    page.drawLine({
+      start: { x: 30, y: 650 },
+      end: { x: 520, y: 650 },
+      thickness: 1,
+      color: borderColor
     });
 
-    page.drawText(`Electricity: Rs. ${bill.electricity}`, {
+    // Meta Section Box (Billed To & Invoice Details)
+    page.drawRectangle({
       x: 50,
-      y: 450,
-      size: 12,
-      font
+      y: 530,
+      width: 450,
+      height: 100,
+      color: lightBg,
+      borderColor,
+      borderWidth: 1
     });
 
-    page.drawText(`Water: Rs. ${bill.water}`, {
+    // Billed To Column
+    page.drawText('BILLED TO', { x: 65, y: 610, size: 9, font: fontBold, color: grayText });
+    page.drawText(tenantName, { x: 65, y: 590, size: 12, font: fontBold, color: darkText });
+    page.drawText(unitLabel, { x: 65, y: 574, size: 10, font: fontRegular, color: grayText });
+    page.drawText(tenant.email, { x: 65, y: 558, size: 9, font: fontRegular, color: grayText });
+
+    // Invoice Meta Column
+    page.drawText('INVOICE DETAILS', { x: 300, y: 610, size: 9, font: fontBold, color: grayText });
+    page.drawText(`Billing Month: ${bill.month || 'N/A'}`, { x: 300, y: 590, size: 10, font: fontRegular, color: darkText });
+    page.drawText(`Issue Date: ${formatDate(bill.createdAt)}`, { x: 300, y: 574, size: 10, font: fontRegular, color: darkText });
+    page.drawText(`Status: ${bill.status || 'Pending'}`, { x: 300, y: 558, size: 10, font: fontBold, color: bill.status === 'Paid' ? emeraldColor : bill.status === 'Partial' ? accentBlue : amberColor });
+
+    // Table Header
+    page.drawRectangle({
       x: 50,
-      y: 430,
-      size: 12,
-      font
+      y: 485,
+      width: 450,
+      height: 25,
+      color: primaryColor
     });
 
-    page.drawText(`Total: Rs. ${bill.totalAmount}`, {
+    page.drawText('DESCRIPTION', { x: 65, y: 493, size: 10, font: fontBold, color: rgb(1, 1, 1) });
+    page.drawText('AMOUNT', { x: 420, y: 493, size: 10, font: fontBold, color: rgb(1, 1, 1) });
+
+    // Table Rows
+    const items = [
+      { label: 'Base Rent', amount: rent },
+      { label: 'Electricity Charges', amount: electricity },
+      { label: 'Water Utility', amount: water },
+      { label: 'Maintenance Fee', amount: maintenance }
+    ];
+
+    if (otherCharges > 0) items.push({ label: 'Other Charges', amount: otherCharges });
+    if (lateFee > 0) items.push({ label: 'Late Fee Applied', amount: lateFee });
+    if (discount > 0) items.push({ label: 'Discount Applied', amount: -discount, isDiscount: true });
+
+    let currentY = 460;
+    items.forEach((item) => {
+      page.drawLine({
+        start: { x: 50, y: currentY - 8 },
+        end: { x: 500, y: currentY - 8 },
+        thickness: 0.5,
+        color: borderColor
+      });
+
+      const labelColor = item.isDiscount ? emeraldColor : darkText;
+      const amtText = item.isDiscount ? `-Rs. ${Math.abs(item.amount).toLocaleString('en-IN')}` : `Rs. ${item.amount.toLocaleString('en-IN')}`;
+
+      page.drawText(item.label, { x: 65, y: currentY, size: 10, font: item.isDiscount ? fontBold : fontRegular, color: labelColor });
+      page.drawText(amtText, { x: 410, y: currentY, size: 10, font: fontBold, color: labelColor });
+
+      currentY -= 25;
+    });
+
+    // Total Amount & Payment Breakdown Box
+    page.drawRectangle({
       x: 50,
-      y: 400,
-      size: 16,
-      font
+      y: currentY - 75,
+      width: 450,
+      height: 70,
+      color: lightBg,
+      borderColor: accentBlue,
+      borderWidth: 1.5
+    });
+
+    page.drawText('TOTAL AMOUNT DUE', { x: 65, y: currentY - 25, size: 9, font: fontBold, color: grayText });
+    page.drawText(`Rs. ${totalAmount.toLocaleString('en-IN')}`, { x: 65, y: currentY - 50, size: 16, font: fontBold, color: primaryColor });
+
+    page.drawText('AMOUNT PAID SO FAR', { x: 230, y: currentY - 25, size: 9, font: fontBold, color: grayText });
+    page.drawText(`Rs. ${totalPaidSoFar.toLocaleString('en-IN')}`, { x: 230, y: currentY - 50, size: 16, font: fontBold, color: emeraldColor });
+
+    page.drawText('REMAINING BALANCE', { x: 370, y: currentY - 25, size: 9, font: fontBold, color: grayText });
+    page.drawText(`Rs. ${remainingBalance.toLocaleString('en-IN')}`, { x: 370, y: currentY - 50, size: 16, font: fontBold, color: remainingBalance > 0 ? amberColor : emeraldColor });
+
+    // Footer
+    page.drawLine({
+      start: { x: 50, y: 70 },
+      end: { x: 500, y: 70 },
+      thickness: 1,
+      color: borderColor
+    });
+
+    page.drawText('Thank you for your prompt payment.', {
+      x: 180,
+      y: 50,
+      size: 10,
+      font: fontRegular,
+      color: grayText
+    });
+
+    page.drawText('Generated electronically by PropertyBills Management System', {
+      x: 135,
+      y: 38,
+      size: 8,
+      font: fontRegular,
+      color: grayText
     });
 
     const pdfBytes = await pdfDoc.save();
     const pdfBuffer = Buffer.from(pdfBytes);
 
-    // Send email
+    // Send email with rich HTML content and PDF attachment
     await sendInvoiceEmail(
       tenant.email,
       pdfBuffer,
-      bill.invoiceNumber
+      bill.invoiceNumber,
+      {
+        tenantName,
+        month: bill.month,
+        totalAmount,
+        totalPaid: totalPaidSoFar,
+        remainingBalance,
+        status: bill.status || 'Pending'
+      }
     );
 
     // Create notification

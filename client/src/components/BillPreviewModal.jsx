@@ -36,9 +36,10 @@ export default function BillPreviewModal({
   });
   const [submittingPayment, setSubmittingPayment] = useState(false);
 
-  // PDF Download State
+  // PDF & Email State
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [downloadingReceiptId, setDownloadingReceiptId] = useState(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     setBill(initialBill);
@@ -47,6 +48,27 @@ export default function BillPreviewModal({
 
   const isRealObjectId = (id) =>
     typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id);
+
+  // Email Invoice PDF
+  const handleEmailInvoice = async () => {
+    if (!bill?._id) return;
+
+    try {
+      setSendingEmail(true);
+
+      if (isRealObjectId(bill._id)) {
+        const res = await api.post(`/invoices/${bill._id}/email`);
+        toast.success(res.data?.message || 'Invoice emailed successfully!');
+      } else {
+        toast.error('Save bill first to email invoice');
+      }
+    } catch (err) {
+      console.error('Failed to email invoice:', err);
+      toast.error(err.response?.data?.message || 'Failed to email invoice');
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   useEffect(() => {
     if (!bill?._id || !isOpen) return;
@@ -921,7 +943,36 @@ export default function BillPreviewModal({
 
         {/* Footer Actions */}
         <DialogFooter className="p-4 border-t border-gray-100 bg-gray-50/50 flex flex-row items-center justify-between gap-3 print:hidden">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Email Invoice */}
+            <Button
+              variant="outline"
+              onClick={handleEmailInvoice}
+              disabled={sendingEmail}
+              size="sm"
+              className="gap-1.5 text-xs border-indigo-200 text-indigo-700 bg-indigo-50/50 hover:bg-indigo-100/70"
+            >
+              {sendingEmail ? (
+                <Spinner size="sm" />
+              ) : (
+                <svg
+                  className="w-4 h-4 text-indigo-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+              )}
+
+              {sendingEmail ? 'Sending Email...' : 'Email Invoice'}
+            </Button>
+
             {/* Download PDF Invoice */}
             <Button
               variant="outline"
