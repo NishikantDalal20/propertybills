@@ -13,10 +13,14 @@ import invoiceRoutes from './routes/invoices.js';
 import statsRoutes from './routes/stats.js';
 import reportRoutes from './routes/reports.js';
 import notificationRoutes from './routes/notifications.js';
+import { startDueDateReminderJob } from './jobs/dueDateReminderJob.js';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Start due-date reminder background scheduler
+startDueDateReminderJob();
 
 // Authentication routes
 app.use('/api/auth', authRoutes);
