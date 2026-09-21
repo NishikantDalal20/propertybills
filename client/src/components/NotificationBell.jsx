@@ -23,6 +23,13 @@ export default function NotificationBell() {
   useEffect(() => {
     fetchNotifications();
 
+
+    // Setup Polling every 60 seconds
+    const interval = setInterval(() => {
+      fetchNotifications(true);
+    }, 60000);
+
+
     // Close dropdown on outside click
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -142,6 +149,7 @@ export default function NotificationBell() {
               )}
             </div>
 
+
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
@@ -150,6 +158,18 @@ export default function NotificationBell() {
                 Mark all as read
               </button>
             )}
+
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  Mark read
+                </button>
+              )}
+            </div>
+
           </div>
 
           {/* List Content */}
