@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 import Bill from '../models/Bill.js';
 import RentalUnit from '../models/RentalUnit.js';
 import Tenant from '../models/Tenant.js';
-import Notification from '../models/Notification.js';
 import auth from '../middleware/auth.js';
 import { calculateBill } from '../utils/billCalculator.js';
 
@@ -131,29 +130,6 @@ router.get('/overdue', auth, async (req, res) => {
   } catch (err) {
     console.error('Error updating overdue bills:', err);
     res.status(500).json({ message: 'Server error while checking overdue bills' });
-  }
-});
-
-// Manual-trigger due date reminders endpoint
-router.post('/send-reminders', auth, async (req, res) => {
-  try {
-    const dueSoon = await Bill.find({
-      status: 'Pending',
-      dueDate: { $lte: new Date(Date.now() + 3 * 86400000) }
-    }).populate('tenantId');
-
-    for (const bill of dueSoon) {
-      await Notification.create({
-        userId: req.user.id,
-        message: `Bill ${bill.invoiceNumber} due soon`,
-        type: 'due_reminder'
-      });
-    }
-
-    res.json({ sent: dueSoon.length });
-  } catch (err) {
-    console.error('Error sending due reminders:', err);
-    res.status(500).json({ message: err.message || 'Server error sending due reminders' });
   }
 });
 
