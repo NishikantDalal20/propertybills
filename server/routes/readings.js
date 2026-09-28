@@ -36,6 +36,10 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'Readings must be valid numbers' });
     }
 
+    if (prevNum < 0 || currNum < 0) {
+      return res.status(400).json({ message: 'Meter readings cannot be negative' });
+    }
+
     if (currNum < prevNum) {
       return res.status(400).json({ message: 'Current reading cannot be less than previous reading' });
     }

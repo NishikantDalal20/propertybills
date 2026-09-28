@@ -2,11 +2,19 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Bill from '../models/Bill.js';
 import RentalUnit from '../models/RentalUnit.js';
+import Property from '../models/Property.js';
 import Tenant from '../models/Tenant.js';
 import auth from '../middleware/auth.js';
 import { calculateBill } from '../utils/billCalculator.js';
 
 const router = express.Router();
+
+async function getUserUnitIds(userId) {
+  const properties = await Property.find({ ownerId: userId });
+  const propertyIds = properties.map(p => p._id);
+  const units = await RentalUnit.find({ propertyId: { $in: propertyIds } });
+  return units.map(u => u._id);
+}
 
 router.post('/generate', auth, async (req, res) => {
   try {
@@ -48,6 +56,11 @@ router.post('/generate', auth, async (req, res) => {
       finalTenantId = activeTenant ? activeTenant._id : null;
     }
 
+    // Late fee calculation: check for existing overdue bill on this unit
+    const previousOverdue = await Bill.findOne({ unitId, status: 'Overdue' });
+    const computedLateFee = previousOverdue ? previousOverdue.totalAmount * 0.02 : 0;
+    const lateFee = req.body.lateFee !== undefined ? Number(req.body.lateFee) || 0 : computedLateFee;
+
     const rentAmount = Number(unit.rentAmount) || 0;
     const consumed = Number(unitsConsumed) || 0;
     const rate = Number(electricityRate) || 0;
@@ -63,7 +76,8 @@ router.post('/generate', auth, async (req, res) => {
       water: waterFee,
       maintenance: maintFee,
       otherCharges: extraFee,
-      discount: disc
+      discount: disc,
+      lateFee
     });
 
     const invoiceNumber = `INV-${Date.now()}`;
@@ -78,6 +92,7 @@ router.post('/generate', auth, async (req, res) => {
       maintenance: maintFee,
       otherCharges: extraFee,
       discount: disc,
+      lateFee,
       totalAmount,
       dueDate: dueDate || new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
       status: 'Pending'
@@ -92,7 +107,10 @@ router.post('/generate', auth, async (req, res) => {
 
 router.get('/', auth, async (req, res) => {
   try {
-    const bills = await Bill.find().populate('unitId tenantId').sort({ createdAt: -1 });
+    const unitIds = await getUserUnitIds(req.user.id);
+    const bills = await Bill.find({ unitId: { $in: unitIds } })
+      .populate('unitId tenantId')
+      .sort({ createdAt: -1 });
     res.json(bills);
   } catch (err) {
     console.error('Error fetching bills:', err);
@@ -104,14 +122,15 @@ router.get('/', auth, async (req, res) => {
 router.get('/overdue', auth, async (req, res) => {
   try {
     const now = new Date();
+    const unitIds = await getUserUnitIds(req.user.id);
 
     // Set status to 'Overdue' for any unpaid bills past their due date
     await Bill.updateMany(
-      { dueDate: { $lt: now }, status: { $ne: 'Paid' } },
+      { unitId: { $in: unitIds }, dueDate: { $lt: now }, status: { $ne: 'Paid' } },
       { status: 'Overdue' }
     );
 
-    const overdueBills = await Bill.find({ status: 'Overdue' })
+    const overdueBills = await Bill.find({ unitId: { $in: unitIds }, status: 'Overdue' })
       .populate('unitId tenantId')
       .sort({ dueDate: 1 });
 

@@ -42,6 +42,10 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: 'Unit number already exists for this property' });
     }
 
+    if (req.body.rentAmount !== undefined && Number(req.body.rentAmount) < 0) {
+      return res.status(400).json({ message: 'Rent amount cannot be negative' });
+    }
+
     const unit = await RentalUnit.create(req.body);
     res.status(201).json(unit);
   } catch (err) {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
+import NotificationBell from './NotificationBell';
 import { Button } from '@/components/ui/button';
 
 export default function Navbar() {
@@ -65,8 +66,10 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* User Profile & Logout / Mobile Toggle */}
-        <div className="flex items-center gap-4">
+        {/* Notification Bell, User Profile & Logout / Mobile Toggle */}
+        <div className="flex items-center gap-3">
+          <NotificationBell />
+
           <div className="hidden sm:flex flex-col items-end">
             <span className="text-sm font-semibold text-gray-800">{displayName}</span>
             {displayEmail && <span className="text-xs text-gray-500">{displayEmail}</span>}

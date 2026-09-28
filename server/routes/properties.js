@@ -58,12 +58,15 @@ router.put('/:id', auth, async (req, res) => {
 
 router.delete('/:id', auth, async (req, res) => {
   try {
+    const property = await Property.findOne({ _id: req.params.id, ownerId: req.user.id });
+    if (!property) return res.status(404).json({ message: 'Property not found or unauthorized' });
+
     const units = await RentalUnit.find({ propertyId: req.params.id });
     const unitIds = units.map(u => u._id);
 
     await Tenant.updateMany({ unitId: { $in: unitIds } }, { unitId: null });
     await RentalUnit.deleteMany({ propertyId: req.params.id });
-    await Property.findOneAndDelete({ _id: req.params.id, ownerId: req.user.id });
+    await Property.findByIdAndDelete(req.params.id);
 
     res.json({ message: 'Property deleted' });
   } catch (err) {

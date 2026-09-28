@@ -137,6 +137,7 @@ export default function PropertyDetail() {
             </Select>
             <Input
               type="number"
+              min="0"
               placeholder="Rent Amount"
               value={unitForm.rentAmount}
               required

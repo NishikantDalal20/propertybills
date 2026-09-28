@@ -248,6 +248,7 @@ export default function MeterReadings() {
                       <label className="block text-[11px] font-semibold text-gray-600 mb-1">Electricity Rate (₹/Unit)</label>
                       <Input
                         type="number"
+                        min="0"
                         value={electricityRate}
                         onChange={(e) => setElectricityRate(e.target.value)}
                       />
@@ -256,6 +257,7 @@ export default function MeterReadings() {
                       <label className="block text-[11px] font-semibold text-gray-600 mb-1">Water Utility (₹)</label>
                       <Input
                         type="number"
+                        min="0"
                         value={waterCharges}
                         onChange={(e) => setWaterCharges(e.target.value)}
                       />
@@ -264,6 +266,7 @@ export default function MeterReadings() {
                       <label className="block text-[11px] font-semibold text-gray-600 mb-1">Maintenance Fee (₹)</label>
                       <Input
                         type="number"
+                        min="0"
                         value={maintenanceFee}
                         onChange={(e) => setMaintenanceFee(e.target.value)}
                       />
