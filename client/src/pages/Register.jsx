@@ -93,7 +93,7 @@ export default function Register() {
 
           <CardFooter className="p-8 pt-0 justify-center">
             <p className="text-xs text-center text-gray-500">
-              Have an account? <Link to="/" className="text-blue-600 font-semibold hover:underline">Login here</Link>
+              Have an account? <Link to="/login" className="text-blue-600 font-semibold hover:underline">Login here</Link>
             </p>
           </CardFooter>
         </form>
