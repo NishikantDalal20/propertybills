@@ -52,9 +52,13 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+if (!process.env.MONGO_URI) {
+  console.error('CRITICAL: MONGO_URI environment variable is missing in process.env. Please configure it in your Render Environment settings.');
+} else {
+  mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log('MongoDB connected successfully'))
+    .catch(err => console.error('MongoDB connection error:', err));
+}
 
 app.get('/', (req, res) => res.send('PropertyBills API running'));
 
