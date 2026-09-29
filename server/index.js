@@ -16,8 +16,23 @@ import notificationRoutes from './routes/notifications.js';
 import { startDueDateReminderJob } from './jobs/dueDateReminderJob.js';
 
 const app = express();
-app.use(cors());
+
+// Configure CORS for production & development
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(',').map(url => url.trim())
+  : '*';
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+
 app.use(express.json());
+
+// Health check endpoint for Render monitoring
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // Start due-date reminder background scheduler
 startDueDateReminderJob();
