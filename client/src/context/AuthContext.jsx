@@ -38,7 +38,42 @@ export function AuthProvider({ children }) {
   const login = async (credentials) => {
     const data = await authService.login(credentials);
     
-    // Ensure sensitive data is not kept in storage
+    if (data.requiresVerification) {
+      return data;
+    }
+
+    const { password: _password, ...safeUser } = data.user || {};
+    const userToSave = Object.keys(safeUser).length > 0 ? safeUser : data.user;
+
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(userToSave));
+      setUser(userToSave);
+    }
+    return data;
+  };
+
+  const register = async (userData) => {
+    const data = await authService.register(userData);
+    
+    if (data.requiresOtp) {
+      return data;
+    }
+    
+    const { password: _password, ...safeUser } = data.user || {};
+    const userToSave = Object.keys(safeUser).length > 0 ? safeUser : data.user;
+
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(userToSave));
+      setUser(userToSave);
+    }
+    return data;
+  };
+
+  const verifyOtp = async (email, otp) => {
+    const data = await authService.verifyOtp(email, otp);
+    
     const { password: _password, ...safeUser } = data.user || {};
     const userToSave = Object.keys(safeUser).length > 0 ? safeUser : data.user;
 
@@ -49,17 +84,20 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const register = async (userData) => {
-    const data = await authService.register(userData);
-    
-    const { password: _password, ...safeUser } = data.user || {};
-    const userToSave = Object.keys(safeUser).length > 0 ? safeUser : data.user;
+  const resendOtp = async (email) => {
+    return await authService.resendOtp(email);
+  };
 
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(userToSave));
-    
-    setUser(userToSave);
-    return data;
+  const forgotPassword = async (email) => {
+    return await authService.forgotPassword(email);
+  };
+
+  const verifyResetOtp = async (email, otp) => {
+    return await authService.verifyResetOtp(email, otp);
+  };
+
+  const resetPassword = async (email, otp, newPassword) => {
+    return await authService.resetPassword(email, otp, newPassword);
   };
 
   const logout = () => {
@@ -74,6 +112,11 @@ export function AuthProvider({ children }) {
     loading,
     login,
     register,
+    verifyOtp,
+    resendOtp,
+    forgotPassword,
+    verifyResetOtp,
+    resetPassword,
     logout
   };
 

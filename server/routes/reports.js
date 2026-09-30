@@ -2,6 +2,7 @@ import express from 'express';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import Bill from '../models/Bill.js';
 import RentalUnit from '../models/RentalUnit.js';
+import Property from '../models/Property.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
@@ -30,10 +31,31 @@ const formatDate = (dateInput) => {
   }
 };
 
+async function getUserUnitIds(userId) {
+  const properties = await Property.find({ ownerId: userId });
+  const propertyIds = properties.map(p => p._id);
+  const units = await RentalUnit.find({ propertyId: { $in: propertyIds } });
+  return units.map(u => u._id);
+}
+
 // Dynamic Mongoose Query Builder based on Request Filters
-const buildQuery = async (queryParams) => {
+const buildQuery = async (queryParams, userId) => {
   const { propertyId, month, status, startDate, endDate } = queryParams;
-  const query = {};
+
+  let unitIds = [];
+  if (propertyId && propertyId !== 'all') {
+    const property = await Property.findOne({ _id: propertyId, ownerId: userId });
+    if (!property) {
+      unitIds = [];
+    } else {
+      const units = await RentalUnit.find({ propertyId }).select('_id');
+      unitIds = units.map(u => u._id);
+    }
+  } else {
+    unitIds = await getUserUnitIds(userId);
+  }
+
+  const query = { unitId: { $in: unitIds } };
 
   if (status && status !== 'all') {
     query.status = status;
@@ -49,12 +71,6 @@ const buildQuery = async (queryParams) => {
     if (endDate) query.createdAt.$lte = new Date(new Date(endDate).setHours(23, 59, 59, 999));
   }
 
-  if (propertyId && propertyId !== 'all') {
-    const units = await RentalUnit.find({ propertyId }).select('_id');
-    const unitIds = units.map(u => u._id);
-    query.unitId = { $in: unitIds };
-  }
-
   return query;
 };
 
@@ -64,7 +80,7 @@ const buildQuery = async (queryParams) => {
  */
 router.get('/preview', auth, async (req, res) => {
   try {
-    const query = await buildQuery(req.query);
+    const query = await buildQuery(req.query, req.user.id);
 
     const bills = await Bill.find(query)
       .populate({
@@ -122,7 +138,7 @@ router.get('/preview', auth, async (req, res) => {
  */
 router.get('/revenue-pdf', auth, async (req, res) => {
   try {
-    const baseQuery = await buildQuery(req.query);
+    const baseQuery = await buildQuery(req.query, req.user.id);
 
     // If status filter not explicitly set, default to Paid for revenue reports
     if (!req.query.status || req.query.status === 'all') {
@@ -386,7 +402,7 @@ router.get('/revenue-pdf', auth, async (req, res) => {
  */
 router.get('/revenue-csv', auth, async (req, res) => {
   try {
-    const query = await buildQuery(req.query);
+    const query = await buildQuery(req.query, req.user.id);
     if (!req.query.status || req.query.status === 'all') {
       query.status = 'Paid';
     }
@@ -462,7 +478,7 @@ router.get('/revenue-csv', auth, async (req, res) => {
  */
 router.get('/bills-csv', auth, async (req, res) => {
   try {
-    const query = await buildQuery(req.query);
+    const query = await buildQuery(req.query, req.user.id);
 
     const bills = await Bill.find(query)
       .populate({

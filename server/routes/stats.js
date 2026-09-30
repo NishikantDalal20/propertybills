@@ -1,21 +1,35 @@
 import express from 'express';
 import Bill from '../models/Bill.js';
 import RentalUnit from '../models/RentalUnit.js';
+import Property from '../models/Property.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
 
+async function getUserUnitIds(userId) {
+  const properties = await Property.find({ ownerId: userId });
+  const propertyIds = properties.map(p => p._id);
+  const units = await RentalUnit.find({ propertyId: { $in: propertyIds } });
+  return units.map(u => u._id);
+}
+
 router.get('/summary', auth, async (req, res) => {
   try {
-    const totalBills = await Bill.countDocuments();
-    const paidBills = await Bill.countDocuments({ status: 'Paid' });
-    const pendingBills = await Bill.countDocuments({ status: { $in: ['Pending', 'Partial'] } });
-    const occupiedUnits = await RentalUnit.countDocuments({ status: 'Occupied' });
-    const vacantUnits = await RentalUnit.countDocuments({ status: 'Vacant' });
+    const unitIds = await getUserUnitIds(req.user.id);
+    const properties = await Property.find({ ownerId: req.user.id });
+    const propertyIds = properties.map(p => p._id);
+
+    const totalBills = await Bill.countDocuments({ unitId: { $in: unitIds } });
+    const paidBills = await Bill.countDocuments({ unitId: { $in: unitIds }, status: 'Paid' });
+    const pendingBills = await Bill.countDocuments({ unitId: { $in: unitIds }, status: { $in: ['Pending', 'Partial'] } });
+    const occupiedUnits = await RentalUnit.countDocuments({ propertyId: { $in: propertyIds }, status: 'Occupied' });
+    const vacantUnits = await RentalUnit.countDocuments({ propertyId: { $in: propertyIds }, status: 'Vacant' });
+    
     const revenueAgg = await Bill.aggregate([
-      { $match: { status: 'Paid' } },
+      { $match: { unitId: { $in: unitIds }, status: 'Paid' } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
     ]);
+
     res.json({
       totalBills,
       paidBills,
@@ -32,8 +46,9 @@ router.get('/summary', auth, async (req, res) => {
 
 router.get('/revenue-by-month', auth, async (req, res) => {
   try {
+    const unitIds = await getUserUnitIds(req.user.id);
     const data = await Bill.aggregate([
-      { $match: { status: 'Paid' } },
+      { $match: { unitId: { $in: unitIds }, status: 'Paid' } },
       { $group: { _id: '$month', revenue: { $sum: '$totalAmount' } } },
       { $sort: { _id: 1 } }
     ]);
@@ -46,7 +61,9 @@ router.get('/revenue-by-month', auth, async (req, res) => {
 
 router.get('/payment-status', auth, async (req, res) => {
   try {
+    const unitIds = await getUserUnitIds(req.user.id);
     const data = await Bill.aggregate([
+      { $match: { unitId: { $in: unitIds } } },
       { $group: { _id: '$status', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);
@@ -56,4 +73,5 @@ router.get('/payment-status', auth, async (req, res) => {
     res.status(500).json({ message: 'Server error while fetching payment status stats' });
   }
 });
+
 export default router;

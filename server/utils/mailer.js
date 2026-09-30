@@ -84,3 +84,65 @@ export async function sendInvoiceEmail(to, pdfBuffer, invoiceNumber, details = {
     attachments: [{ filename: `${invoiceNumber}.pdf`, content: pdfBuffer }]
   });
 }
+
+export async function sendOTPEmail(to, otp) {
+  const htmlContent = `
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff;">
+    <div style="background: linear-gradient(135deg, #2563eb 0%, #4338ca 100%); padding: 32px 24px; color: #ffffff; text-align: center;">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">PROPERTYBILLS</h1>
+      <p style="margin: 4px 0 0; font-size: 13px; color: #e0e7ff;">Email Verification Code</p>
+    </div>
+
+    <div style="padding: 32px 24px; text-align: center; color: #1e293b;">
+      <p style="font-size: 15px; margin: 0 0 12px; color: #475569;">Your 6-digit verification code is:</p>
+      <div style="background-color: #f8fafc; border: 2px dashed #2563eb; border-radius: 12px; padding: 16px; margin: 16px 0; display: inline-block;">
+        <span style="font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #1d4ed8; font-family: monospace;">${otp}</span>
+      </div>
+      <p style="font-size: 13px; color: #64748b; margin: 12px 0 0;">This code is valid for <strong>10 minutes</strong>. Do not share this code with anyone.</p>
+    </div>
+
+    <div style="background-color: #f1f5f9; padding: 16px 24px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
+      If you did not request this email, please ignore it.
+    </div>
+  </div>
+  `;
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject: `${otp} is your PropertyBills verification code`,
+    text: `Your PropertyBills verification code is: ${otp}. It is valid for 10 minutes.`,
+    html: htmlContent
+  });
+}
+
+export async function sendPasswordResetEmail(to, otp) {
+  const htmlContent = `
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; background-color: #ffffff;">
+    <div style="background: linear-gradient(135deg, #dc2626 0%, #4338ca 100%); padding: 32px 24px; color: #ffffff; text-align: center;">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">PROPERTYBILLS</h1>
+      <p style="margin: 4px 0 0; font-size: 13px; color: #fef2f2;">Password Reset Code</p>
+    </div>
+
+    <div style="padding: 32px 24px; text-align: center; color: #1e293b;">
+      <p style="font-size: 15px; margin: 0 0 12px; color: #475569;">You requested a password reset. Your 6-digit code is:</p>
+      <div style="background-color: #fef2f2; border: 2px dashed #dc2626; border-radius: 12px; padding: 16px; margin: 16px 0; display: inline-block;">
+        <span style="font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #dc2626; font-family: monospace;">${otp}</span>
+      </div>
+      <p style="font-size: 13px; color: #64748b; margin: 12px 0 0;">This code is valid for <strong>10 minutes</strong>. If you did not request a password reset, please ignore this email.</p>
+    </div>
+
+    <div style="background-color: #f1f5f9; padding: 16px 24px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
+      PropertyBills Account Security
+    </div>
+  </div>
+  `;
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject: `${otp} is your PropertyBills password reset code`,
+    text: `Your PropertyBills password reset code is: ${otp}. It is valid for 10 minutes.`,
+    html: htmlContent
+  });
+}
