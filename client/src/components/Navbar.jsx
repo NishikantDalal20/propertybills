@@ -68,24 +68,24 @@ export default function Navbar({ isLanding = false }) {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle />
             {isLoggedIn ? (
               <Link to="/dashboard">
-                <Button size="sm" className="text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                  Go to Dashboard &rarr;
+                <Button size="sm" className="text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-3 sm:px-4">
+                  Dashboard &rarr;
                 </Button>
               </Link>
             ) : (
               <>
-                <Link to="/login">
+                <Link to="/login" className="hidden sm:inline-block">
                   <Button variant="secondary" size="sm" className="text-xs font-semibold">
                     Sign In
                   </Button>
                 </Link>
                 <Link to="/register">
-                  <Button size="sm" className="text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                    Get Started &rarr;
+                  <Button size="sm" className="text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-3 sm:px-4">
+                    Get Started
                   </Button>
                 </Link>
               </>

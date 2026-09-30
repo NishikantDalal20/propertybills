@@ -18,14 +18,26 @@ import { startDueDateReminderJob } from './jobs/dueDateReminderJob.js';
 const app = express();
 
 // Configure CORS for production & development
-const allowedOrigins = process.env.CLIENT_URL
-  ? process.env.CLIENT_URL.split(',').map(url => url.trim())
-  : '*';
+const getOrigins = () => {
+  if (!process.env.CLIENT_URL) return '*';
+  return process.env.CLIENT_URL.split(',').map(url => url.trim().replace(/\/+$/, ''));
+};
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowed = getOrigins();
+    if (!origin || allowed === '*' || allowed.includes('*') || allowed.includes(origin?.replace(/\/+$/, ''))) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
@@ -36,6 +48,14 @@ app.get('/health', (req, res) => {
 
 // Start due-date reminder background scheduler
 startDueDateReminderJob();
+
+// Route fallback for requests missing /api prefix (e.g. /auth/login -> /api/auth/login)
+app.use((req, res, next) => {
+  if (!req.path.startsWith('/api') && req.path !== '/' && req.path !== '/health') {
+    req.url = `/api${req.url}`;
+  }
+  next();
+});
 
 // Authentication routes
 app.use('/api/auth', authRoutes);

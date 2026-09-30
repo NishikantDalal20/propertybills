@@ -21,7 +21,10 @@ export default function Login() {
     setError('');
 
     try {
-      await login(form);
+      await login({
+        ...form,
+        email: form.email.trim().toLowerCase()
+      });
       toast.success('Logged in successfully!');
       navigate('/dashboard');
     } catch (err) {

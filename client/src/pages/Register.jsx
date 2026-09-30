@@ -21,7 +21,11 @@ export default function Register() {
     setError('');
 
     try {
-      await register(form);
+      await register({
+        ...form,
+        name: form.name.trim(),
+        email: form.email.trim().toLowerCase()
+      });
       toast.success('Account created successfully!');
       navigate('/dashboard');
     } catch (err) {
